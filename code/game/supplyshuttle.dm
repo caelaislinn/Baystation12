@@ -143,9 +143,14 @@ var/list/mechtoys = list(
 	//shuttle movement
 	var/at_station = 0
 	var/movetime = 1200
+	var/movetime_base = 1200
 	var/moving = 0
 	var/eta_timeofday
 	var/eta
+
+	var/datum/trade_destination/current_destination
+	var/datum/trade_destination/next_destination
+	var/sold_this_run = 0
 
 	New()
 		ordernum = rand(1,9000)
@@ -184,18 +189,26 @@ var/list/mechtoys = list(
 				dest = locate(SUPPLY_DOCK_AREATYPE)
 				the_shuttles_way = from
 				at_station = 0
+				current_destination = next_destination
 			if(0)
-				from = locate(SUPPLY_DOCK_AREATYPE)
-				dest = locate(SUPPLY_STATION_AREATYPE)
-				the_shuttles_way = dest
-				at_station = 1
+				if(next_destination)
+					current_destination = next_destination
+					next_destination = null
+				else
+					current_destination = null
+					at_station = 1
+					from = locate(SUPPLY_DOCK_AREATYPE)
+					dest = locate(SUPPLY_STATION_AREATYPE)
+					the_shuttles_way = dest
+					sold_this_run = 0
 		moving = 0
 
-		//Do I really need to explain this loop?
-		for(var/mob/living/unlucky_person in the_shuttles_way)
-			unlucky_person.gib()
+		if(from && dest)
+			//Do I really need to explain this loop?
+			for(var/mob/living/unlucky_person in the_shuttles_way)
+				unlucky_person.gib()
 
-		from.move_contents_to(dest)
+			from.move_contents_to(dest)
 
 	//Check whether the shuttle is allowed to move
 	proc/can_move()
@@ -234,34 +247,87 @@ var/list/mechtoys = list(
 		var/area/shuttle = locate(shuttle_at)
 		if(!shuttle)	return
 
-		var/plasma_count = 0
+		//var/plasma_count = 0
 
-		for(var/atom/movable/MA in shuttle)
-			if(MA.anchored)	continue
+		if(current_destination)
+			sold_this_run = 1
 
-			// Must be in a crate!
-			if(istype(MA,/obj/structure/closet/crate))
-				points += points_per_crate
-				var/find_slip = 1
+			for(var/atom/movable/MA in shuttle)
+				if(MA.anchored)	continue
 
-				for(var/atom in MA)
-					// Sell manifests
-					var/atom/A = atom
-					if(find_slip && istype(A,/obj/item/weapon/paper/manifest))
-						var/obj/item/weapon/paper/slip = A
-						if(slip.stamped && slip.stamped.len) //yes, the clown stamp will work. clown is the highest authority on the station, it makes sense
-							points += points_per_slip
-							find_slip = 0
-						continue
+				// Must be in a crate!
+				if(istype(MA,/obj/structure/closet/crate))
 
-					// Sell plasma
-					if(istype(A, /obj/item/stack/sheet/mineral/plasma))
-						var/obj/item/stack/sheet/mineral/plasma/P = A
-						plasma_count += P.amount
-			del(MA)
+					/*points += points_per_crate
+					var/find_slip = 1*/
 
-		if(plasma_count)
-			points += Floor(plasma_count / plasma_per_point)
+					var/money_earnt_in_sale = 0
+					var/list/sold_orderables = list()
+					for(var/atom/A in MA)
+						//check if the place we are at wants these
+						if(current_destination.orderables_by_type.Find(A.type))
+							world << "[current_destination.name] is buying [A.type]"
+							var/datum/dest_orderable/O = current_destination.orderables_by_type[A.type]
+							sold_orderables.Add(O)
+							O.sold_quantity += 1
+							money_earnt_in_sale += current_destination.RequestUpdatedPrice(O)
+							del(A)
+						else
+							world << "[current_destination.name] does not want [A.type] (contents below)"
+							for(var/key in current_destination.orderables_by_type)
+								world << "	[key]"
+
+
+						// Sell manifests
+						/*if(find_slip && istype(A,/obj/item/weapon/paper/manifest))
+							var/obj/item/weapon/paper/slip = A
+							if(slip.stamped && slip.stamped.len) //yes, the clown stamp will work. clown is the highest authority on the station, it makes sense
+								points += points_per_slip
+								find_slip = 0
+							continue*/
+
+						// Sell plasma
+						/*if(istype(A, /obj/item/stack/sheet/mineral/plasma))
+							var/obj/item/stack/sheet/mineral/plasma/P = A
+							plasma_count += P.amount*/
+
+					//make the transaction, if there was one
+					if(money_earnt_in_sale > 0)
+						var/datum/money_account/M = economy_controller.station_account		//send it to the station account for now
+						var/salesnum = economy_controller.GetNextSalesNum()
+
+						//drop a receipt somewhere in the shuttle randomly, if we can
+						var/area/shuttle = locate(shuttle_at)
+						if(shuttle)
+							var/list/clear_turfs = list()
+							for(var/turf/T in shuttle)
+								if(T.density)	continue
+								clear_turfs += T
+
+							var/obj/item/weapon/paper/sales_receipt = new(pick(clear_turfs))
+							R.name = "[current_destination.name]  Commerce Control sales receipt #[salesnum]"
+							R.info += "Total paid sum: $[money_earnt_in_sale]<br>"
+							for(var/datum/dest_orderable/O in sold_orderables)
+								R.info += "<i>Item:</i> [O.index_name] x [O.sold_quantity] @ $[O.last_calculated_price]ea, total: $[O.sold_quantity * O.last_calculated_price]<br>"
+							R.info += "<br>"
+							R.info += "<i>Deposited to:</i> [M.owner_name]<br>"
+							R.info += "<i>Final balance:</i> $[M.money]<br>"
+							R.info += "<i>Date and time:</i> [worldtime2text()], [current_date_string]<br><br>"
+							R.info += "<i>Creation terminal ID:</i> [current_destination.name] Commerce Terminal #[rand(99,999)]<br>"
+
+						var/datum/transaction/T = new()
+						T.target_name = "[current_destination.name] Commerce Control"
+						T.purpose = "Sales #[salesnum]"
+						T.amount = "[money_earnt_in_sale]"
+						T.date = current_date_string
+						T.time = worldtime2text()
+						T.source_terminal = "[current_destination.name] Commerce Terminal #[rand(99,999)]"
+
+						M.transaction_log.Add(T)
+						economy_controller.station_account.money += money_earnt_in_sale
+
+		/*if(plasma_count)
+			points += Floor(plasma_count / plasma_per_point)*/
 
 	//Buyin
 	proc/buy()
@@ -354,8 +420,10 @@ var/list/mechtoys = list(
 	if(temp)
 		dat = temp
 	else
+		var/shuttleloc = supply_shuttle.at_station ? "Docked at station" : supply_shuttle.current_destination ? "Docked at [supply_shuttle.current_destination.name]" : "Unknown"
 		dat += {"<BR><B>Supply shuttle</B><HR>
-		Location: [supply_shuttle.moving ? "Moving to station ([supply_shuttle.eta] Mins.)":supply_shuttle.at_station ? "Station":"Dock"]<BR>
+		Location: [supply_shuttle.moving ? "In transit ([supply_shuttle.eta] Mins.)" : shuttleloc]<BR>
+		Next destination: [supply_shuttle.next_destination ? supply_shuttle.next_destination.name : station_name()]<BR>
 		<HR>Supply points: [supply_shuttle.points]<BR>
 		<BR>\n<A href='?src=\ref[src];order=categories'>Request items</A><BR><BR>
 		<A href='?src=\ref[src];vieworders=1'>View approved orders</A><BR><BR>
@@ -374,17 +442,16 @@ var/list/mechtoys = list(
 		usr.set_machine(src)
 
 	if(href_list["order"])
-		if(href_list["order"] == "categories")
+		last_viewed_group = href_list["order"]
+		if(last_viewed_group == "categories")
 			//all_supply_groups
 			//Request what?
-			last_viewed_group = "categories"
 			temp = "<b>Supply points: [supply_shuttle.points]</b><BR>"
 			temp += "<A href='?src=\ref[src];mainmenu=1'>Main Menu</A><HR><BR><BR>"
 			temp += "<b>Select a category</b><BR><BR>"
 			for(var/supply_group_name in all_supply_groups )
 				temp += "<A href='?src=\ref[src];order=[supply_group_name]'>[supply_group_name]</A><BR>"
 		else
-			last_viewed_group = href_list["order"]
 			temp = "<b>Supply points: [supply_shuttle.points]</b><BR>"
 			temp += "<A href='?src=\ref[src];order=categories'>Back to all categories</A><HR><BR><BR>"
 			temp += "<b>Request from: [last_viewed_group]</b><BR><BR>"
@@ -479,11 +546,14 @@ var/list/mechtoys = list(
 	if (temp)
 		dat = temp
 	else
+		var/shuttleloc = supply_shuttle.at_station ? "Docked at station" : supply_shuttle.current_destination ? "Docked at [supply_shuttle.current_destination.name]" : "Unknown"
 		dat += {"<BR><B>Supply shuttle</B><HR>
-		\nLocation: [supply_shuttle.moving ? "Moving to station ([supply_shuttle.eta] Mins.)":supply_shuttle.at_station ? "Station":"Away"]<BR>
+		\nLocation: [supply_shuttle.moving ? "In transit ([supply_shuttle.eta] Mins.)": shuttleloc]<BR>
+		Next destination: [supply_shuttle.next_destination ? supply_shuttle.next_destination.name : station_name()]<BR>
 		<HR>\nSupply points: [supply_shuttle.points]<BR>\n<BR>
 		[supply_shuttle.moving ? "\n*Must be away to order items*<BR>\n<BR>":supply_shuttle.at_station ? "\n*Must be away to order items*<BR>\n<BR>":"\n<A href='?src=\ref[src];order=categories'>Order items</A><BR>\n<BR>"]
 		[supply_shuttle.moving ? "\n*Shuttle already called*<BR>\n<BR>":supply_shuttle.at_station ? "\n<A href='?src=\ref[src];send=1'>Send away</A><BR>\n<BR>":"\n<A href='?src=\ref[src];send=1'>Send to station</A><BR>\n<BR>"]
+		\n<A href='?src=\ref[src];setdest=1'>Set next destination</A><BR>\n<BR>
 		\n<A href='?src=\ref[src];viewrequests=1'>View requests</A><BR>\n<BR>
 		\n<A href='?src=\ref[src];vieworders=1'>View orders</A><BR>\n<BR>
 		\n<A href='?src=\ref[user];mach_close=computer'>Close</A>"}
@@ -545,16 +615,33 @@ var/list/mechtoys = list(
 			temp = "For safety reasons the automated supply shuttle cannot transport live organisms, classified nuclear weaponry or homing beacons.<BR><BR><A href='?src=\ref[src];mainmenu=1'>OK</A>"
 
 		else if(supply_shuttle.at_station)
-			supply_shuttle.moving = -1
-			supply_shuttle.sell()
-			supply_shuttle.send()
-			temp = "The supply shuttle has departed.<BR><BR><A href='?src=\ref[src];mainmenu=1'>OK</A>"
+			if(supply_shuttle.next_destination)
+				supply_shuttle.moving = -1
+				supply_shuttle.send()
+				if(!supply_shuttle.sold_this_run)
+					supply_shuttle.sell()
+				temp = "The supply shuttle has departed.<BR><BR><A href='?src=\ref[src];mainmenu=1'>OK</A>"
+			else
+				usr << "\red You must choose a destination for the supply shuttle!"
 		else
 			supply_shuttle.moving = 1
 			supply_shuttle.buy()
+			if(supply_shuttle.next_destination)
+				supply_shuttle.movetime = supply_shuttle.movetime_base * supply_shuttle.next_destination.distance
+			else
+				supply_shuttle.movetime = supply_shuttle.movetime_base
 			supply_shuttle.eta_timeofday = (world.timeofday + supply_shuttle.movetime) % 864000
 			temp = "The supply shuttle has been called and will arrive in [round(supply_shuttle.movetime/600,1)] minutes.<BR><BR><A href='?src=\ref[src];mainmenu=1'>OK</A>"
 			post_signal("supply")
+
+	else if (href_list["setdest"])
+		var/list/options = list()
+		options["Cancel"] = "Cancel"
+		for(var/datum/trade_destination/D in economy_controller.trade_destinations)
+			options[D.name] = D
+		var/ind = input("Select next destination") as null|anything in options
+		if(ind && options.Find(ind))
+			supply_shuttle.next_destination = options[ind]
 
 	else if (href_list["order"])
 		if(supply_shuttle.moving) return
