@@ -22,32 +22,25 @@ log transactions
 	anchored = 1
 	use_power = 1
 	idle_power_usage = 10
-	var/obj/machinery/account_database/linked_db
 	var/datum/money_account/authenticated_account
 	var/number_incorrect_tries = 0
 	var/previous_account_number = 0
 	var/max_pin_attempts = 3
 	var/ticks_left_locked_down = 0
 	var/ticks_left_timeout = 0
-	var/machine_id = ""
+	var/machine_id
 	var/obj/item/weapon/card/held_card
 	var/editing_security_level = 0
 	var/view_screen = NO_SCREEN
 
 /obj/machinery/atm/New()
 	..()
-	reconnect_database()
-	machine_id = "[station_name()] RT #[num_financial_terminals++]"
+	if(!machine_id)
+		machine_id = "[station_name()] RT #[economy_controller.num_financial_terminals++]"
 
 /obj/machinery/atm/process()
 	if(stat & NOPOWER)
 		return
-
-	if(linked_db && ( (linked_db.stat & NOPOWER) || !linked_db.activated ) )
-		linked_db = null
-		authenticated_account = null
-		src.visible_message("\red \icon[src] [src] buzzes rudely, \"Connection to remote database lost.\"")
-		updateDialog()
 
 	if(ticks_left_timeout > 0)
 		ticks_left_timeout--
@@ -65,12 +58,6 @@ log transactions
 		else
 			playsound(loc, 'sound/items/polaroid2.ogg', 50, 1)
 		break
-
-/obj/machinery/atm/proc/reconnect_database()
-	for(var/obj/machinery/account_database/DB in world)
-		if( DB.z == src.z && !(DB.stat & NOPOWER) && DB.activated )
-			linked_db = DB
-			break
 
 /obj/machinery/atm/attackby(obj/item/I as obj, mob/user as mob)
 	if(istype(I, /obj/item/weapon/card))
@@ -185,7 +172,7 @@ log transactions
 					dat += "<A href='?src=\ref[src];choice=view_screen;view_screen=3'>View transaction log</a><br>"
 					dat += "<A href='?src=\ref[src];choice=balance_statement'>Print balance statement</a><br>"
 					dat += "<A href='?src=\ref[src];choice=logout'>Logout</a><br>"
-		else if(linked_db)
+		else
 			dat += "<form name='atm_auth' action='?src=\ref[src]' method='get'>"
 			dat += "<input type='hidden' name='src' value='\ref[src]'>"
 			dat += "<input type='hidden' name='choice' value='attempt_auth'>"
@@ -193,9 +180,6 @@ log transactions
 			dat += "<b>PIN:</b> <input type='text' id='account_pin' name='account_pin' style='width:250px; background-color:white;'><br>"
 			dat += "<input type='submit' value='Submit'><br>"
 			dat += "</form>"
-		else
-			dat += "<span class='warning'>Unable to connect to accounts database, please retry and if the issue persists contact NanoTrasen IT support.</span>"
-			reconnect_database()
 
 		user << browse(dat,"window=atm;size=550x650")
 	else
@@ -205,12 +189,12 @@ log transactions
 	if(href_list["choice"])
 		switch(href_list["choice"])
 			if("transfer")
-				if(authenticated_account && linked_db)
+				if(authenticated_account)
 					var/target_account_number = text2num(href_list["target_acc_number"])
 					var/transfer_amount = text2num(href_list["funds_amount"])
 					var/transfer_purpose = href_list["purpose"]
 					if(transfer_amount <= authenticated_account.money)
-						if(linked_db.charge_to_account(target_account_number, authenticated_account.owner_name, transfer_purpose, machine_id, transfer_amount))
+						if(economy_controller.charge_to_account(target_account_number, authenticated_account.owner_name, transfer_purpose, machine_id, transfer_amount))
 							usr << "\icon[src]<span class='info'>Funds transfer successful.</span>"
 							authenticated_account.money -= transfer_amount
 
@@ -235,13 +219,13 @@ log transactions
 					var/new_sec_level = max( min(text2num(href_list["new_security_level"]), 2), 0)
 					authenticated_account.security_level = new_sec_level
 			if("attempt_auth")
-				if(linked_db && !ticks_left_locked_down)
+				if(!ticks_left_locked_down)
 					var/tried_account_num = text2num(href_list["account_num"])
 					if(!tried_account_num)
 						tried_account_num = held_card.associated_account_number
 					var/tried_pin = text2num(href_list["account_pin"])
 
-					authenticated_account = linked_db.attempt_account_access(tried_account_num, tried_pin, held_card && held_card.associated_account_number == tried_account_num ? 2 : 1)
+					authenticated_account = economy_controller.attempt_account_access(tried_account_num, tried_pin, held_card && held_card.associated_account_number == tried_account_num ? 2 : 1)
 					if(!authenticated_account)
 						number_incorrect_tries++
 						if(previous_account_number == tried_account_num)
@@ -377,7 +361,7 @@ log transactions
 
 //stolen wholesale and then edited a bit from newscasters, which are awesome and by Agouri
 /obj/machinery/atm/proc/scan_user(mob/living/carbon/human/human_user as mob)
-	if(!authenticated_account && linked_db)
+	if(!authenticated_account)
 		if(human_user.wear_id)
 			var/obj/item/weapon/card/id/I
 			if(istype(human_user.wear_id, /obj/item/weapon/card/id) )
@@ -386,7 +370,7 @@ log transactions
 				var/obj/item/device/pda/P = human_user.wear_id
 				I = P.id
 			if(I)
-				authenticated_account = linked_db.attempt_account_access(I.associated_account_number)
+				authenticated_account = economy_controller.attempt_account_access(I.associated_account_number)
 				if(authenticated_account)
 					human_user << "\blue \icon[src] Access granted. Welcome user '[authenticated_account.owner_name].'"
 

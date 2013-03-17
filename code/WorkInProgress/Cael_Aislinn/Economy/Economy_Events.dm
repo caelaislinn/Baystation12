@@ -6,12 +6,10 @@
 	var/list/cheaper_goods = list()
 	var/list/dearer_goods = list()
 	var/datum/trade_destination/affected_dest
+	var/list/temp_price_changes = list()
 
 /datum/event/economic_event/start()
-	if(!setup_economy)
-		setup_economy()
-
-	affected_dest = pickweight(weighted_randomevent_locations)
+	affected_dest = pickweight(economy_controller.weighted_randomevent_locations)
 	if(affected_dest.viable_random_events.len)
 		endWhen = rand(60,300)
 		event_type = pick(affected_dest.viable_random_events)
@@ -49,10 +47,16 @@
 				dearer_goods = list(ANIMALS)
 			if(FESTIVAL)
 				dearer_goods = list(FOOD, ANIMALS)
-		for(var/good_type in dearer_goods)
-			affected_dest.temp_price_change[good_type] = rand(1,100)
-		for(var/good_type in cheaper_goods)
-			affected_dest.temp_price_change[good_type] = rand(1,100) / 100
+
+		//any overlaps will preference the goods being cheaper
+		for(var/cat in dearer_goods)
+			temp_price_changes[cat] = 1.25 + rand() * 0.5
+			for(var/datum/dest_orderable/O in affected_dest.orderables[cat])
+				O.event_price_mod = temp_price_changes[cat]
+		for(var/cat in cheaper_goods)
+			temp_price_changes[cat] = 0.25 + rand() * 0.5
+			for(var/datum/dest_orderable/O in affected_dest.orderables[cat])
+				O.event_price_mod = temp_price_changes[cat]
 
 /datum/event/economic_event/announce()
 	//copy-pasted from the admin verbs to submit new newscaster messages
@@ -102,7 +106,9 @@
 		NEWSCASTER.newsAlert("Tau Ceti Daily")
 
 /datum/event/economic_event/end()
-	for(var/good_type in dearer_goods)
-		affected_dest.temp_price_change[good_type] = 1
-	for(var/good_type in cheaper_goods)
-		affected_dest.temp_price_change[good_type] = 1
+	for(var/cat in dearer_goods)
+		for(var/datum/dest_orderable/O in affected_dest.orderables[cat])
+			O.event_price_mod = 1
+	for(var/cat in cheaper_goods)
+		for(var/datum/dest_orderable/O in affected_dest.orderables[cat])
+			O.event_price_mod = 1

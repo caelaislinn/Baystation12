@@ -3,7 +3,7 @@
 	desc = "Swipe your ID card to make purchases electronically."
 	icon = 'icons/obj/device.dmi'
 	icon_state = "eftpos"
-	var/machine_id = ""
+	var/machine_id
 	var/eftpos_name = "Default EFTPOS scanner"
 	var/transaction_locked = 0
 	var/transaction_paid = 0
@@ -15,7 +15,8 @@
 
 /obj/item/device/eftpos/New()
 	..()
-	machine_id = "[station_name()] EFTPOS #[num_financial_terminals++]"
+	if(!machine_id)
+		machine_id = "[station_name()] EFTPOS #[economy_controller.num_financial_terminals++]"
 	access_code = rand(1111,111111)
 	reconnect_database()
 	spawn(0)
@@ -23,7 +24,7 @@
 
 	//by default, connect to the station account
 	//the user of the EFTPOS device can change the target account though, and no-one will be the wiser (except whoever's being charged)
-	linked_account = station_account
+	linked_account = economy_controller.station_account
 
 /obj/item/device/eftpos/proc/print_reference()
 	var/obj/item/weapon/paper/R = new(src.loc)
@@ -118,7 +119,7 @@
 				if(linked_db)
 					var/attempt_account_num = input("Enter account number to pay EFTPOS charges into", "New account number") as num
 					var/attempt_pin = input("Enter pin code", "Account pin") as num
-					linked_account = linked_db.attempt_account_access(attempt_account_num, attempt_pin, 1)
+					linked_account = economy_controller.attempt_account_access(attempt_account_num, attempt_pin, 1)
 				else
 					usr << "\icon[src]<span class='warning'>Unable to connect to accounts database.</span>"
 			if("trans_purpose")
@@ -166,7 +167,7 @@
 		if(transaction_locked && !transaction_paid)
 			if(linked_account)
 				var/attempt_pin = input("Enter pin code", "EFTPOS transaction") as num
-				var/datum/money_account/D = linked_db.attempt_account_access(C.associated_account_number, attempt_pin, 2)
+				var/datum/money_account/D = economy_controller.attempt_account_access(C.associated_account_number, attempt_pin, 2)
 				if(D)
 					if(transaction_amount <= D.money)
 						playsound(src, 'chime.ogg', 50, 1)

@@ -105,21 +105,11 @@ var/global/datum/controller/gameticker/ticker
 	else
 		src.mode.announce()
 
-	//setup the money accounts
-	if(!centcomm_account_db)
-		for(var/obj/machinery/account_database/check_db in world)
-			if(check_db.z == 2)
-				centcomm_account_db = check_db
-				break
-
 	create_characters() //Create player characters and transfer them
 	collect_minds()
 	equip_characters()
 	data_core.manifest()
 	current_state = GAME_STATE_PLAYING
-
-	//here to initialize the random events nicely at round start
-	setup_economy()
 
 	spawn(0)//Forking here so we dont have to wait for this to finish
 		mode.post_setup()
@@ -146,6 +136,7 @@ var/global/datum/controller/gameticker/ticker
 	supply_shuttle.process() 		//Start the supply shuttle regenerating points -- TLE
 	master_controller.process()		//Start master_controller.process()
 	lighting_controller.process()	//Start processing DynamicAreaLighting updates
+	economy_controller.process()	//Start processing the market stuff
 
 
 	if(config.sql_enabled)

@@ -325,8 +325,7 @@ var/global/datum/controller/occupations/job_master
 				H.loc = S.loc
 
 		//give them an account in the station database
-		if(centcomm_account_db)
-			var/datum/money_account/M = centcomm_account_db.add_account_across_all(H.real_name, starting_funds = rand(50,500)*10, pre_existing = 1)
+			var/datum/money_account/M = economy_controller.add_account(H.real_name, starting_funds = rand(50,500)*10)
 			if(H.mind)
 				var/remembered_info = ""
 				remembered_info += "<b>Your account number is:</b> #[M.account_number]<br>"
@@ -343,7 +342,8 @@ var/global/datum/controller/occupations/job_master
 			// If they're head, give them the account info for their department
 			if(H.mind && job.head_position)
 				var/remembered_info = ""
-				var/datum/money_account/department_account = department_accounts[job.department]
+				var/list/L = economy_controller.department_accounts
+				var/datum/money_account/department_account = L[job.department]
 
 				if(department_account)
 					remembered_info += "<b>Your department's account number is:</b> #[department_account.account_number]<br>"

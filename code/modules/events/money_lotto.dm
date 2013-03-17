@@ -7,8 +7,8 @@
 
 /datum/event/money_lotto/start()
 	winner_sum = pick(5000, 10000, 50000, 100000, 500000, 1000000, 1500000)
-	if(centcomm_account_db.accounts.len)
-		var/datum/money_account/D = pick(centcomm_account_db.accounts)
+	if(economy_controller.accounts.len)
+		var/datum/money_account/D = pick(economy_controller.accounts)
 		D.money += winner_sum
 
 		var/datum/transaction/T = new()

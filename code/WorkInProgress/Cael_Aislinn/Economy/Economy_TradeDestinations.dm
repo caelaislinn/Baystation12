@@ -1,110 +1,164 @@
 
-var/list/weighted_randomevent_locations = list()
-var/list/weighted_mundaneevent_locations = list()
+//the whole costs and pricing mechanism employs delayed calculation in order to minimise processing
+//this makes the system somewhat more complex, but hopefully the tradeoff is worth it
 
 /datum/trade_destination
 	var/name = ""
 	var/description = ""
 	var/distance = 0
-	var/list/willing_to_buy = list()
-	var/list/willing_to_sell = list()
-	var/can_shuttle_here = 0		//one day crew from the exodus will be able to travel to this destination
+	var/total_order_cost = 0
+
+	var/list/orderables = list()
+	var/list/orderables_by_type = list()
+
+	var/list/orderable_types_supply = list()
+	var/list/orderable_categories_supply = list()
+
+	var/list/orderables_needing_price_updates = list()
+
+	var/list/orderables_readyforpurchase = list()
+	var/list/orderables_withpickup = list()
+
 	var/list/viable_random_events = list()
-	var/list/temp_price_change[BIOMEDICAL]
 	var/list/viable_mundane_events = list()
+
+/datum/trade_destination/New()
+	//initialise trade orders
+	set background = 1
+
+	orderables.len = MAX_ORDERABLE
+	for(var/orderable_type in typesof(/datum/dest_orderable) - /datum/dest_orderable)
+		var/datum/dest_orderable/O = new orderable_type()
+		//require a spawn type to order this
+		if(O.spawn_type)
+			var/cat_text = economy_controller.goods_strings(O.category)
+
+			//prioritise unique types over categories
+			var/willing_to_trade = 0
+			var/supply_dir = 0
+			if( orderable_types_supply.Find(O.spawn_type) )
+				supply_dir = orderable_types_supply[O.spawn_type]
+				willing_to_trade = 1
+
+			else if( orderable_categories_supply.Find(cat_text) )
+				supply_dir = orderable_categories_supply[O.spawn_type]
+				willing_to_trade = 1
+
+			if(supply_dir > 0)
+				//produce this resource, driving down prices
+				O.industry_price_mod = economy_controller.global_industrysupply_pricemod / abs(supply_dir)
+				O.local_stored_prod = abs(O.local_stored_prod) + 5
+
+			else if(supply_dir < 0)
+				//consume this resource, driving up prices
+				O.industry_price_mod = economy_controller.global_industrydemand_pricemod * supply_dir
+				O.local_stored_prod = -(abs(O.local_stored_prod) + 5)
+
+			//if this dest wants to trade that item, then proceed with the rest of the initialisation
+			if(willing_to_trade)
+				if(!orderables.Find(cat_text))
+					orderables[cat_text] = list()
+				var/list/L = orderables[cat_text]
+				L.Add(O)
+				orderables_by_type[O.spawn_type] = O	//todo: why isn't this working?
+			else
+				del(O)
+
+		else
+			del(O)
 
 /datum/trade_destination/proc/get_custom_eventstring(var/event_type)
 	return null
 
-//distance is measured in AU and co-relates to travel time
-/datum/trade_destination/centcomm
-	name = "CentComm"
-	description = "NanoTrasen's administrative centre for Tau Ceti."
-	distance = 1.2
-	willing_to_buy = list()
-	willing_to_sell = list()
-	viable_random_events = list(SECURITY_BREACH, CORPORATE_ATTACK, AI_LIBERATION)
-	viable_mundane_events = list(ELECTION, RESIGNATION, CELEBRITY_DEATH)
+/datum/trade_destination/proc/ModifyOrderQuantity(var/datum/dest_orderable/O, var/quantity_diff)
+	O.quantity_ordered = min(max(O.quantity_ordered + quantity_diff, 0), O.local_stored)
 
-/datum/trade_destination/anansi
-	name = "NSS Anansi"
-	description = "Medical station ran by Second Red Cross (but owned by NT) for handling emergency cases from nearby colonies."
-	distance = 1.7
-	willing_to_buy = list()
-	willing_to_sell = list()
-	viable_random_events = list(SECURITY_BREACH, CULT_CELL_REVEALED, BIOHAZARD_OUTBREAK, PIRATES, ALIEN_RAIDERS)
-	viable_mundane_events = list(RESEARCH_BREAKTHROUGH, RESEARCH_BREAKTHROUGH, BARGAINS, GOSSIP)
+	//if the price doesn't need recalculating, we can use it to work out the cost of this goods order
+	//otherwise, just leave the cost update until when the price gets updated as well
+	if(!orderables_needing_price_updates.Find(O))
+		total_order_cost -= O.archived_total_cost
+		O.archived_total_cost = O.last_calculated_price * O.quantity_ordered
+		total_order_cost += O.archived_total_cost
 
-/datum/trade_destination/anansi/get_custom_eventstring(var/event_type)
-	if(event_type == RESEARCH_BREAKTHROUGH)
-		return "Thanks to research conducted on the NSS Anansi, Second Red Cross Society wishes to announce a major breakthough in the field of \
-		[pick("mind-machine interfacing","neuroscience","nano-augmentation","genetics")]. NanoTrasen is expected to announce a co-exploitation deal within the fortnight."
-	return null
+	if(O.quantity_ordered > 0)
+		if(!orderables_readyforpurchase.Find(O))
+			orderables_readyforpurchase.Add(O)
+	else if(orderables_readyforpurchase.Find(O))
+		orderables_readyforpurchase.Remove(O)
 
-/datum/trade_destination/icarus
-	name = "NMV Icarus"
-	description = "Corvette assigned to patrol NSS Exodus local space."
-	distance = 0.1
-	willing_to_buy = list()
-	willing_to_sell = list()
-	viable_random_events = list(SECURITY_BREACH, AI_LIBERATION, PIRATES)
+/datum/trade_destination/proc/RequestUpdatedPrice(var/datum/dest_orderable/O)
+	if(orderables_needing_price_updates.Find(O))
+		return ForcePriceUpdate(O)
 
-/datum/trade_destination/redolant
-	name = "OAV Redolant"
-	description = "Osiris Atmospherics station in orbit around the only gas giant insystem. They retain tight control over shipping rights, and Osiris warships protecting their prize are not an uncommon sight in Tau Ceti."
-	distance = 0.6
-	willing_to_buy = list()
-	willing_to_sell = list()
-	viable_random_events = list(INDUSTRIAL_ACCIDENT, PIRATES, CORPORATE_ATTACK)
-	viable_mundane_events = list(RESEARCH_BREAKTHROUGH, RESEARCH_BREAKTHROUGH)
+	return O.last_calculated_price
 
-/datum/trade_destination/redolant/get_custom_eventstring(var/event_type)
-	if(event_type == RESEARCH_BREAKTHROUGH)
-		return "Thanks to research conducted on the OAV Redolant, Osiris Atmospherics wishes to announce a major breakthough in the field of \
-		[pick("plasma research","high energy flux capacitance","super-compressed materials","theoretical particle physics")]. NanoTrasen is expected to announce a co-exploitation deal within the fortnight."
-	return null
+/datum/trade_destination/proc/ForcePriceUpdate(var/datum/dest_orderable/O)
+	//we need to update the destination order cost here
+	//this is to to prevent desyncs between
+	//	destination order cost
+	//	individual goods total cost
+	//	individual goods price
 
-/datum/trade_destination/beltway
-	name = "Beltway mining chain"
-	description = "A co-operative effort between Beltway and NanoTrasen to exploit the rich outer asteroid belt of the Tau Ceti system."
-	distance = 7.5
-	willing_to_buy = list()
-	willing_to_sell = list()
-	viable_random_events = list(PIRATES, INDUSTRIAL_ACCIDENT)
-	viable_mundane_events = list(TOURISM)
+	total_order_cost -= O.archived_total_cost
 
-/datum/trade_destination/biesel
-	name = "Biesel"
-	description = "Large ship yards, strong economy and a stable, well-educated populace, Biesel largely owes allegiance to Sol / Vessel Contracting and begrudgingly tolerates NT. Capital is Lowell City."
-	distance = 2.3
-	willing_to_buy = list()
-	willing_to_sell = list()
-	viable_random_events = list(RIOTS, INDUSTRIAL_ACCIDENT, BIOHAZARD_OUTBREAK, CULT_CELL_REVEALED, FESTIVAL, MOURNING)
-	viable_mundane_events = list(BARGAINS, GOSSIP, SONG_DEBUT, MOVIE_RELEASE, ELECTION, TOURISM, RESIGNATION, CELEBRITY_DEATH)
+	O.last_calculated_price = round(O.base_price * O.industry_price_mod * O.event_price_mod * O.supply_price_mod, 0.01)
+	O.archived_total_cost = O.last_calculated_price * O.quantity_ordered
 
-/datum/trade_destination/new_gibson
-	name = "New Gibson"
-	description = "Heavily industrialised rocky planet containing the majority of the planet-bound resources in the system, New Gibson is torn by unrest and has very little wealth to call it's own except in the hands of the corporations who jostle with NT for control."
-	distance = 6.6
-	willing_to_buy = list()
-	willing_to_sell = list()
-	viable_random_events = list(RIOTS, INDUSTRIAL_ACCIDENT, BIOHAZARD_OUTBREAK, CULT_CELL_REVEALED, FESTIVAL, MOURNING)
-	viable_mundane_events = list(ELECTION, TOURISM, RESIGNATION)
+	total_order_cost += O.archived_total_cost
 
-/datum/trade_destination/luthien
-	name = "Luthien"
-	description = "A small colony established on a feral, untamed world (largely jungle). Savages and wild beasts attack the outpost regularly, although NT maintains tight military control."
-	distance = 8.9
-	willing_to_buy = list()
-	willing_to_sell = list()
-	viable_random_events = list(WILD_ANIMAL_ATTACK, CULT_CELL_REVEALED, FESTIVAL, MOURNING, ANIMAL_RIGHTS_RAID, ALIEN_RAIDERS)
-	viable_mundane_events = list(ELECTION, TOURISM, BIG_GAME_HUNTERS, RESIGNATION)
+	while(orderables_needing_price_updates.Remove(O))
 
-/datum/trade_destination/reade
-	name = "Reade"
-	description = "A cold, metal-deficient world, NT maintains large pastures in whatever available space in an attempt to salvage something from this profitless colony."
-	distance = 7.5
-	willing_to_buy = list()
-	willing_to_sell = list()
-	viable_random_events = list(WILD_ANIMAL_ATTACK, CULT_CELL_REVEALED, FESTIVAL, MOURNING, ANIMAL_RIGHTS_RAID, ALIEN_RAIDERS)
-	viable_mundane_events = list(ELECTION, TOURISM, BIG_GAME_HUNTERS, RESIGNATION)
+	return O.last_calculated_price
+
+/datum/trade_destination/proc/CompleteOrder()
+	for(var/datum/dest_orderable/O in orderables_readyforpurchase)
+		if(orderables_needing_price_updates.Find(O))
+			ForcePriceUpdate(O)
+
+		orderables_readyforpurchase.Remove(O)
+		if(!orderables_withpickup.Find(O))
+			orderables_withpickup.Add(O)
+		orderables_needing_price_updates.Add(O)
+
+		O.ProcessOrder()
+
+/datum/trade_destination/proc/DelayedUpdate()
+	for(var/index in orderables)
+		var/list/L = orderables[index]
+		if(L && L.len)
+			for(var/datum/dest_orderable/O in L)
+				//DelayedUpdate() returns true if it needs a price update
+				if(O.DelayedUpdate() && !orderables_needing_price_updates.Find(O))
+					orderables_needing_price_updates.Add(O)
+
+/datum/trade_destination/proc/RequestOrderCost()
+	//this is to cutdown on unnecessary recalcs
+	for(var/datum/dest_orderable/O in orderables_needing_price_updates)
+		ForcePriceUpdate(O)
+
+	//sanity checking, this seems necessary
+	if(total_order_cost < 0)
+		FullPriceCostUpdate()
+
+	return total_order_cost
+
+//fully recalculate all prices and costs
+//this is here in case the caching system breaks, and has to be manually triggered by players
+/datum/trade_destination/proc/FullPriceCostUpdate()
+	total_order_cost = 0
+	orderables_readyforpurchase = list()
+	orderables_withpickup = list()
+	for(var/cur_type in orderables_by_type)
+		for(var/datum/dest_orderable/O in orderables_by_type[cur_type])
+			O.supply_price_mod = 0.25 + 0.75 * (1.01 - (O.local_stored + O.local_stored * 0.01) / O.local_stored_max)
+			O.last_calculated_price = round(O.base_price * O.industry_price_mod * O.event_price_mod * O.supply_price_mod, 0.01)
+
+			if(O.quantity_ordered > 0)
+				O.archived_total_cost = O.last_calculated_price * O.quantity_ordered
+				total_order_cost += O.archived_total_cost
+				orderables_readyforpurchase.Add(O)
+
+			if(O.quantity_waiting_pickup > 0)
+				orderables_withpickup.Add(O)
+
+	orderables_needing_price_updates = list()
