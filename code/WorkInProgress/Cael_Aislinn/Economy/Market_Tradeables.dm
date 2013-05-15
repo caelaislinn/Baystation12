@@ -63,9 +63,9 @@ datum/controller/global_market
 /datum/dest_orderable/proc/DelayedUpdate()
 	set background = 1
 
-	var/temp = cached_extra_supply
+	/*var/temp = cached_extra_supply
 	cached_extra_supply = 0
-	return SetStoredLocally(local_stored + local_stored_prod + temp)
+	return SetStoredLocally(local_stored + local_stored_prod + temp)*/
 
 //return 1 if we changed the amount stored
 /datum/dest_orderable/proc/SetStoredLocally(var/amount)

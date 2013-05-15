@@ -7,6 +7,7 @@
 	var/description = ""
 	var/distance = 0
 	var/total_order_cost = 0
+	var/supply_pickup = 0
 
 	var/list/orderables = list()
 	var/list/orderables_by_type = list()

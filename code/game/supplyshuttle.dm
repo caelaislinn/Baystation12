@@ -297,7 +297,7 @@ var/list/mechtoys = list(
 						var/salesnum = economy_controller.GetNextSalesNum()
 
 						//drop a receipt somewhere in the shuttle randomly, if we can
-						var/area/shuttle = locate(shuttle_at)
+						//var/area/shuttle = locate(shuttle_at)
 						if(shuttle)
 							var/list/clear_turfs = list()
 							for(var/turf/T in shuttle)
@@ -305,15 +305,15 @@ var/list/mechtoys = list(
 								clear_turfs += T
 
 							var/obj/item/weapon/paper/sales_receipt = new(pick(clear_turfs))
-							R.name = "[current_destination.name]  Commerce Control sales receipt #[salesnum]"
-							R.info += "Total paid sum: $[money_earnt_in_sale]<br>"
+							sales_receipt.name = "[current_destination.name]  Commerce Control sales receipt #[salesnum]"
+							sales_receipt.info += "Total paid sum: $[money_earnt_in_sale]<br>"
 							for(var/datum/dest_orderable/O in sold_orderables)
-								R.info += "<i>Item:</i> [O.index_name] x [O.sold_quantity] @ $[O.last_calculated_price]ea, total: $[O.sold_quantity * O.last_calculated_price]<br>"
-							R.info += "<br>"
-							R.info += "<i>Deposited to:</i> [M.owner_name]<br>"
-							R.info += "<i>Final balance:</i> $[M.money]<br>"
-							R.info += "<i>Date and time:</i> [worldtime2text()], [current_date_string]<br><br>"
-							R.info += "<i>Creation terminal ID:</i> [current_destination.name] Commerce Terminal #[rand(99,999)]<br>"
+								sales_receipt.info += "<i>Item:</i> [O.index_name] x [O.sold_quantity] @ $[O.last_calculated_price]ea, total: $[O.sold_quantity * O.last_calculated_price]<br>"
+							sales_receipt.info += "<br>"
+							sales_receipt.info += "<i>Deposited to:</i> [M.owner_name]<br>"
+							sales_receipt.info += "<i>Final balance:</i> $[M.money]<br>"
+							sales_receipt.info += "<i>Date and time:</i> [worldtime2text()], [current_date_string]<br><br>"
+							sales_receipt.info += "<i>Creation terminal ID:</i> [current_destination.name] Commerce Terminal #[rand(99,999)]<br>"
 
 						var/datum/transaction/T = new()
 						T.target_name = "[current_destination.name] Commerce Control"
@@ -331,7 +331,7 @@ var/list/mechtoys = list(
 
 	//Buyin
 	proc/buy()
-		if(!shoppinglist.len) return
+		if(!shoppinglist.len || !current_destination || !current_destination.orderables_withpickup.len) return
 
 		var/shuttle_at
 		if(at_station)	shuttle_at = SUPPLY_STATION_AREATYPE
@@ -346,54 +346,74 @@ var/list/mechtoys = list(
 			if(T.density || T.contents.len)	continue
 			clear_turfs += T
 
-		for(var/S in shoppinglist)
-			if(!clear_turfs.len)	break
-			var/i = rand(1,clear_turfs.len)
-			var/turf/pickedloc = clear_turfs[i]
-			clear_turfs.Cut(i,i+1)
+		//ordinary supplies
+		if(current_destination)
+			if(current_destination.supply_pickup)
+				for(var/S in shoppinglist)
+					if(!clear_turfs.len)	break
+					var/i = rand(1,clear_turfs.len)
+					var/turf/pickedloc = clear_turfs[i]
+					clear_turfs.Cut(i,i+1)
 
-			var/datum/supply_order/SO = S
-			var/datum/supply_packs/SP = SO.object
+					var/datum/supply_order/SO = S
+					var/datum/supply_packs/SP = SO.object
 
-			var/atom/A = new SP.containertype(pickedloc)
-			A.name = "[SP.containername] [SO.comment ? "([SO.comment])":"" ]"
+					var/atom/A = new SP.containertype(pickedloc)
+					A.name = "[SP.containername] [SO.comment ? "([SO.comment])":"" ]"
 
-			//supply manifest generation begin
+					//supply manifest generation begin
 
-			var/obj/item/weapon/paper/manifest/slip = new /obj/item/weapon/paper/manifest(A)
-			slip.info = "<h3>[command_name()] Shipping Manifest</h3><hr><br>"
-			slip.info +="Order #[SO.ordernum]<br>"
-			slip.info +="Destination: [station_name]<br>"
-			slip.info +="[supply_shuttle.shoppinglist.len] PACKAGES IN THIS SHIPMENT<br>"
-			slip.info +="CONTENTS:<br><ul>"
+					var/obj/item/weapon/paper/manifest/slip = new /obj/item/weapon/paper/manifest(A)
+					slip.info = "<h3>[command_name()] Shipping Manifest</h3><hr><br>"
+					slip.info +="Order #[SO.ordernum]<br>"
+					slip.info +="Destination: [station_name]<br>"
+					slip.info +="[supply_shuttle.shoppinglist.len] PACKAGES IN THIS SHIPMENT<br>"
+					slip.info +="CONTENTS:<br><ul>"
 
-			//spawn the stuff, finish generating the manifest while you're at it
-			if(SP.access)
-				A:req_access = list()
-				A:req_access += text2num(SP.access)
+					//spawn the stuff, finish generating the manifest while you're at it
+					if(SP.access)
+						A:req_access = list()
+						A:req_access += text2num(SP.access)
 
-			var/list/contains
-			if(istype(SP,/datum/supply_packs/randomised))
-				var/datum/supply_packs/randomised/SPR = SP
-				contains = list()
-				if(SPR.contains.len)
-					for(var/j=1,j<=SPR.num_contained,j++)
-						contains += pick(SPR.contains)
-			else
-				contains = SP.contains
+					var/list/contains
+					if(istype(SP,/datum/supply_packs/randomised))
+						var/datum/supply_packs/randomised/SPR = SP
+						contains = list()
+						if(SPR.contains.len)
+							for(var/j=1,j<=SPR.num_contained,j++)
+								contains += pick(SPR.contains)
+					else
+						contains = SP.contains
 
-			for(var/typepath in contains)
-				if(!typepath)	continue
-				var/atom/B2 = new typepath(A)
-				if(SP.amount && B2:amount) B2:amount = SP.amount
-				slip.info += "<li>[B2.name]</li>" //add the item to the manifest
+					for(var/typepath in contains)
+						if(!typepath)	continue
+						var/atom/B2 = new typepath(A)
+						if(SP.amount && B2:amount) B2:amount = SP.amount
+						slip.info += "<li>[B2.name]</li>" //add the item to the manifest
 
-			//manifest finalisation
-			slip.info += "</ul><br>"
-			slip.info += "CHECK CONTENTS AND STAMP BELOW THE LINE TO CONFIRM RECEIPT OF GOODS<hr>"
-			if (SP.contraband) slip.loc = null	//we are out of blanks for Form #44-D Ordering Illicit Drugs.
+					//manifest finalisation
+					slip.info += "</ul><br>"
+					slip.info += "CHECK CONTENTS AND STAMP BELOW THE LINE TO CONFIRM RECEIPT OF GOODS<hr>"
+					if (SP.contraband) slip.loc = null	//we are out of blanks for Form #44-D Ordering Illicit Drugs.
 
-		supply_shuttle.shoppinglist.Cut()
+				supply_shuttle.shoppinglist.Cut()
+
+			//purchased cargo from this destination
+			var/list/completed_orders = list()
+			for(var/datum/dest_orderable/O in current_destination.orderables_withpickup)
+				current_destination.orderables_withpickup.Remove(O)
+				if(O.quantity_waiting_pickup > 0 && O.spawn_type)
+					if(!clear_turfs.len)	break
+					completed_orders.Add(O)
+					var/i = rand(1,clear_turfs.len)
+					var/turf/pickedloc = clear_turfs[i]
+					clear_turfs.Cut(i,i+1)
+
+					var/atom/container = new O.container_type(pickedloc)
+					container.name = "[O.name] [economy_controller.goods_strings(O.category)] ([O.index_name])"
+					for(var/index = 0, index < O.quantity_waiting_pickup, ++index)
+						var/atom/A = new O.spawn_type(container)
+
 		return
 
 /obj/item/weapon/paper/manifest

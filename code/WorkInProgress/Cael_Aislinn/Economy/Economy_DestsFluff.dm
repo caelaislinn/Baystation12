@@ -7,6 +7,7 @@
 	distance = 1.2
 	viable_random_events = list(SECURITY_BREACH, CORPORATE_ATTACK, AI_LIBERATION)
 	viable_mundane_events = list(ELECTION, RESIGNATION, CELEBRITY_DEATH)
+	supply_pickup = 1
 
 	//centcomm can be a "trade hub" for now
 	orderable_categories_supply = list(\

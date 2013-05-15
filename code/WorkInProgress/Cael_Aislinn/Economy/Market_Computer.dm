@@ -161,7 +161,7 @@
 				//we can safely access cached values here, because they were updated just above
 				var/obj/item/weapon/paper/R = new(src.loc)
 				R.name = "TradeNet purchase receipt #[receipt_num]"
-				R.info = "<b>TradeNet purchase receipt #[receipt_num]</b><br>"
+				R.info = "<b>TradeNet purchase receipt #[receipt_num]:</b> [cur_dest.name]<br>"
 				R.info += "Total Purchase cost: $[total_cost]<br>"
 				for(var/datum/dest_orderable/O in cur_dest.orderables_readyforpurchase)
 					R.info += "<i>Item:</i> [O.index_name] x [O.quantity_ordered] @ $[O.last_calculated_price]ea, total: $[O.archived_total_cost]<br>"
