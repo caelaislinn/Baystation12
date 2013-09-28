@@ -331,7 +331,11 @@ var/list/mechtoys = list(
 
 	//Buyin
 	proc/buy()
-		if(!shoppinglist.len || !current_destination || !current_destination.orderables_withpickup.len) return
+		world << "proc/buy()"
+		world << "	current_destination: [current_destination]"
+		world << "	shoppinglist.len: [shoppinglist.len]"
+		world << "	current_destination.orderables_withpickup.len: [current_destination.orderables_withpickup.len]"
+		if(!current_destination || (!shoppinglist.len || !current_destination.orderables_withpickup.len) ) return
 
 		var/shuttle_at
 		if(at_station)	shuttle_at = SUPPLY_STATION_AREATYPE
@@ -347,56 +351,56 @@ var/list/mechtoys = list(
 			clear_turfs += T
 
 		//ordinary supplies
-		if(current_destination)
-			if(current_destination.supply_pickup)
-				for(var/S in shoppinglist)
-					if(!clear_turfs.len)	break
-					var/i = rand(1,clear_turfs.len)
-					var/turf/pickedloc = clear_turfs[i]
-					clear_turfs.Cut(i,i+1)
+		world << "	current_destination.supply_pickup: [current_destination.supply_pickup]"
+		if(current_destination.supply_pickup)
+			for(var/S in shoppinglist)
+				if(!clear_turfs.len)	break
+				var/i = rand(1,clear_turfs.len)
+				var/turf/pickedloc = clear_turfs[i]
+				clear_turfs.Cut(i,i+1)
 
-					var/datum/supply_order/SO = S
-					var/datum/supply_packs/SP = SO.object
+				var/datum/supply_order/SO = S
+				var/datum/supply_packs/SP = SO.object
 
-					var/atom/A = new SP.containertype(pickedloc)
-					A.name = "[SP.containername] [SO.comment ? "([SO.comment])":"" ]"
+				var/atom/A = new SP.containertype(pickedloc)
+				A.name = "[SP.containername] [SO.comment ? "([SO.comment])":"" ]"
 
-					//supply manifest generation begin
+				//supply manifest generation begin
 
-					var/obj/item/weapon/paper/manifest/slip = new /obj/item/weapon/paper/manifest(A)
-					slip.info = "<h3>[command_name()] Shipping Manifest</h3><hr><br>"
-					slip.info +="Order #[SO.ordernum]<br>"
-					slip.info +="Destination: [station_name]<br>"
-					slip.info +="[supply_shuttle.shoppinglist.len] PACKAGES IN THIS SHIPMENT<br>"
-					slip.info +="CONTENTS:<br><ul>"
+				var/obj/item/weapon/paper/manifest/slip = new /obj/item/weapon/paper/manifest(A)
+				slip.info = "<h3>[command_name()] Shipping Manifest</h3><hr><br>"
+				slip.info +="Order #[SO.ordernum]<br>"
+				slip.info +="Destination: [station_name]<br>"
+				slip.info +="[supply_shuttle.shoppinglist.len] PACKAGES IN THIS SHIPMENT<br>"
+				slip.info +="CONTENTS:<br><ul>"
 
-					//spawn the stuff, finish generating the manifest while you're at it
-					if(SP.access)
-						A:req_access = list()
-						A:req_access += text2num(SP.access)
+				//spawn the stuff, finish generating the manifest while you're at it
+				if(SP.access)
+					A:req_access = list()
+					A:req_access += text2num(SP.access)
 
-					var/list/contains
-					if(istype(SP,/datum/supply_packs/randomised))
-						var/datum/supply_packs/randomised/SPR = SP
-						contains = list()
-						if(SPR.contains.len)
-							for(var/j=1,j<=SPR.num_contained,j++)
-								contains += pick(SPR.contains)
-					else
-						contains = SP.contains
+				var/list/contains
+				if(istype(SP,/datum/supply_packs/randomised))
+					var/datum/supply_packs/randomised/SPR = SP
+					contains = list()
+					if(SPR.contains.len)
+						for(var/j=1,j<=SPR.num_contained,j++)
+							contains += pick(SPR.contains)
+				else
+					contains = SP.contains
 
-					for(var/typepath in contains)
-						if(!typepath)	continue
-						var/atom/B2 = new typepath(A)
-						if(SP.amount && B2:amount) B2:amount = SP.amount
-						slip.info += "<li>[B2.name]</li>" //add the item to the manifest
+				for(var/typepath in contains)
+					if(!typepath)	continue
+					var/atom/B2 = new typepath(A)
+					if(SP.amount && B2:amount) B2:amount = SP.amount
+					slip.info += "<li>[B2.name]</li>" //add the item to the manifest
 
-					//manifest finalisation
-					slip.info += "</ul><br>"
-					slip.info += "CHECK CONTENTS AND STAMP BELOW THE LINE TO CONFIRM RECEIPT OF GOODS<hr>"
-					if (SP.contraband) slip.loc = null	//we are out of blanks for Form #44-D Ordering Illicit Drugs.
+				//manifest finalisation
+				slip.info += "</ul><br>"
+				slip.info += "CHECK CONTENTS AND STAMP BELOW THE LINE TO CONFIRM RECEIPT OF GOODS<hr>"
+				if (SP.contraband) slip.loc = null	//we are out of blanks for Form #44-D Ordering Illicit Drugs.
 
-				supply_shuttle.shoppinglist.Cut()
+			supply_shuttle.shoppinglist.Cut()
 
 			//purchased cargo from this destination
 			var/list/completed_orders = list()
@@ -410,7 +414,7 @@ var/list/mechtoys = list(
 					clear_turfs.Cut(i,i+1)
 
 					var/atom/container = new O.container_type(pickedloc)
-					container.name = "[O.name] [economy_controller.goods_strings(O.category)] ([O.index_name])"
+					container.name = "[container.name] [economy_controller.goods_strings(O.category)] ([O.index_name])"
 					for(var/index = 0, index < O.quantity_waiting_pickup, ++index)
 						var/atom/A = new O.spawn_type(container)
 
