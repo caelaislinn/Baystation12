@@ -1,0 +1,33 @@
+
+<div><b>Graph of radiation over past 10 seconds</b></div>
+Radiation (mSv) (light radiation vs heavy radiation)
+<table style="height:140px; width:200px;">
+	<tr>
+		{{for data.tenticks_lightrads}}
+			<td class="graphAxis">
+				{{:value}}
+			</td>
+			<td class="graphAxis">
+				{{:data.tenticks_heavyrads[index]}}
+			</td>
+		{{/for}}
+	</tr>
+	<tr style="background-color:#0000FF; height:100px">
+		{{for data.tenticks_lightrads}}
+			<td class="graphBar">
+				<div style="background-color:#00ff00; height:{{:value}}px; width:20px"></div>
+			</td>
+			<td class="graphBar">
+				<div style="background-color:#ff0000; height:{{:data.tenticks_heavyrads[index]}}px; width:20px"></div>
+			</td>
+		{{/for}}
+	</tr>
+	<tr>
+		{{for data.tenticks_lightrads}}
+			<td class="graphAxis" colspan="2">
+				{{:index - 9}}
+			</td>
+		{{/for}}
+	</tr>
+</table>
+Time since present (sec)

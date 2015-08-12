@@ -8,10 +8,7 @@
 	anchored = 1
 	density = 1
 	var/movement_range = 10
-	var/energy = 10		//energy in eV
-	var/mega_energy = 0	//energy in MeV
-	var/frequency = 1
-	var/ionizing = 0
+	var/energy = 10
 	var/particle_type
 	var/additional_particles = 0
 	var/turf/target
@@ -36,7 +33,7 @@
 		move(1)
 	return
 
-
+//todo: does this even work? not sure if it does -Cael
 /obj/effect/accelerated_particle/Bump(atom/A)
 	if (A)
 		if(ismob(A))
@@ -80,6 +77,20 @@
 		if(!step(src,dir))
 			src.loc = get_step(src,dir)
 	movement_range--
+
+	//todo: this is not a nice way to handle this. it was good enough for singulo but that is it
+	var/obj/effect/rust_particle_catcher/catcher = locate() in src.loc
+	if(catcher && catcher.TryAddParticles(src))
+		movement_range = 0
+	var/obj/machinery/power/rust_core/core = locate() in src.loc
+	if(core && core.AddParticles(src))
+		movement_range = 0
+
+	var/mob/living/M = locate() in src.loc
+	if(M)
+		toxmob(M)
+		movement_range = 0
+
 	if(movement_range <= 0)
 		qdel(src)
 	else

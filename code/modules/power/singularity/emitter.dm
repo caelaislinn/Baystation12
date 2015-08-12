@@ -225,10 +225,36 @@
 		return
 	..()
 	return
-	
+
 /obj/machinery/power/emitter/emag_act(var/remaining_charges, var/mob/user)
 	if(!emagged)
 		locked = 0
 		emagged = 1
 		user.visible_message("[user.name] emags [src].","<span class='warning'>You short out the lock.</span>")
 		return 1
+
+/obj/machinery/power/emitter/Topic(href, href_list)
+	..()
+	if( href_list["toggle_activate"] )
+		var/mob/user = locate(href_list["user"])
+		activate(user)
+		return
+
+	if( href_list["modifyburst"] )
+		var/mob/user = locate(href_list["user"])
+		var/newval = input(user, "Enter new burst delay (seconds)", "Modify burst delay", (min_burst_delay + max_burst_delay) / 2) as num
+		newval *= 10
+		newval = min(100, newval)
+		newval = max(20, newval)
+		min_burst_delay = newval
+		max_burst_delay = min_burst_delay
+		return
+
+	if( href_list["modifyshots"] )
+		var/mob/user = locate(href_list["user"])
+		var/newval = input(user, "Enter new burst delay (seconds)", "Modify burst delay", burst_shots) as num
+		newval *= 10
+		newval = min(6, newval)
+		newval = max(1, newval)
+		burst_shots = newval
+		return

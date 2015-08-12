@@ -589,3 +589,23 @@ th.misc {
 .width75btn {
     width: 75px;
 }
+
+/* Various formatting for the RUST Reaction Monitor Computer */
+
+table
+{
+	width:250px;
+	border-collapse: collapse;
+}
+td
+{
+	//width:30px
+}
+td.graphAxis
+{
+	//padding:0px;
+}
+tr
+{
+	vertical-align:bottom;
+}
