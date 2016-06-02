@@ -1,4 +1,10 @@
 
+var/list/contents_to_ignore = list(\
+/atom/movable/lighting_overlay,\
+/obj/machinery/overmap_vehicle,\
+/obj/effect/virtual_area,\
+)
+
 //used by shuttles and virtual areas
 //i thought i'd make this a global seeing as it seems generically useful, ther's just a little bit of edge case handling i couldn't shake
 //warning: make sure the stuff getting swapped can handle it in their logic! results might be unpredictable otherwise
@@ -90,28 +96,18 @@
 	//remember the old turf contents
 	var/list/old_contents = list()
 	for(var/atom/movable/AM in new_virtual)
-		if(istype(AM, /obj/effect/virtual_area))
+		if(is_type_in_list(AM, contents_to_ignore))
 			continue
 		old_contents.Add(AM)
 
 	//swap the turf contents
 	for(var/atom/movable/AM in new_interior)
-		if(istype(AM, /obj/effect/virtual_area))
-			continue
-		if(istype(AM, /obj/machinery/overmap_vehicle))
-			continue
-		if(istype(AM, /atom/movable/lighting_overlay))
-			//qdel(AM)
+		if(is_type_in_list(AM, contents_to_ignore))
 			continue
 		AM.loc = new_virtual
 	//
 	for(var/atom/movable/AM in old_contents)
-		if(istype(AM, /obj/effect/virtual_area))
-			continue
-		if(istype(AM, /obj/machinery/overmap_vehicle))
-			continue
-		if(istype(AM, /atom/movable/lighting_overlay))
-			//qdel(AM)
+		if(is_type_in_list(AM, contents_to_ignore))
 			continue
 		AM.loc = new_interior
 

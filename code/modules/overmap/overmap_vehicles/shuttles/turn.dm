@@ -121,9 +121,12 @@
 	M.Translate(new_bound_width/2, new_bound_height/2)
 	//world << "translating ([bound_width/2],[bound_height/2])"
 
+	//lol actually this screws it up now, there must have been a bug in byond 509 (?) that made it necessary
+	/*
 	//not sure why this is needed but it seems to work smoothly
 	if(dir & (NORTH|SOUTH))
 		M.Translate(new_bound_width/2, -new_bound_height/4)
+		*/
 
 	//apply the new transform
 	transform = M
@@ -142,4 +145,18 @@
 	if(src.move_dir)
 		src.move_dir = newdir
 
+	//testing
+	while(boundsmarkers.len <= locs.len)
+		boundsmarkers.Add(new /obj/effect/boundsmarker(src))
+	for(var/i=1, i <= locs.len, i++)
+		var/obj/effect/boundsmarker/curmarker = boundsmarkers[i]
+		var/turf/T = locs[i]
+		curmarker.loc = T
+
 	return 1
+
+/obj/machinery/overmap_vehicle/shuttle/var/list/boundsmarkers = list()
+/obj/effect/boundsmarker
+	name = "boundsmarker"
+	icon = 'icons/mob/screen1.dmi'
+	icon_state = "x2"
