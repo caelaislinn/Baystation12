@@ -626,12 +626,11 @@ var/global/datum/controller/occupations/job_master
 /datum/controller/occupations/proc/LateSpawn(var/mob/living/carbon/human/H, var/rank)
 	//spawn at one of the latespawn locations
 
-	var/datum/spawnpoint/spawnpos
+	//force everyone to spawn from cryo for now. later make this round dependant
+	var/datum/spawnpoint/spawnpos = spawntypes["Cryogenic Storage"]
 
-	if(H.client.prefs.spawnpoint)
-		//force everyone to spawn from cryo for now. later make this round dependant
-		spawnpos = spawntypes["Cryogenic Storage"]
-		//spawnpos = spawntypes[H.client.prefs.spawnpoint]
+	/*if(H.client.prefs.spawnpoint)
+		spawnpos = spawntypes[H.client.prefs.spawnpoint]*/
 
 	if(spawnpos && istype(spawnpos))
 		if(spawnpos.check_job_spawning(rank))
