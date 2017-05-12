@@ -33,6 +33,8 @@
 		for(var/mob/M in contents)
 			M.loc = get_step_rand(centre_turf)
 			M.unset_machine()
+			if(M.client)
+				M.client.view = client_screen_size
 
 		//misc stuff
 		processing_objects.Remove(src)
