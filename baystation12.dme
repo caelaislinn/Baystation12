@@ -1612,6 +1612,7 @@
 #include "code\modules\overmap\overmap_vehicles\components\hud_objects\autobrake.dm"
 #include "code\modules\overmap\overmap_vehicles\components\hud_objects\autodock.dm"
 #include "code\modules\overmap\overmap_vehicles\components\hud_objects\customise.dm"
+#include "code\modules\overmap\overmap_vehicles\components\hud_objects\cycle_airlock.dm"
 #include "code\modules\overmap\overmap_vehicles\components\hud_objects\fire_control.dm"
 #include "code\modules\overmap\overmap_vehicles\components\hud_objects\fire_selected.dm"
 #include "code\modules\overmap\overmap_vehicles\components\hud_objects\floodlights.dm"
