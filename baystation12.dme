@@ -1543,7 +1543,6 @@
 #include "code\modules\overmap\controller\factions.dm"
 #include "code\modules\overmap\controller\initialise_overmapobj.dm"
 #include "code\modules\overmap\controller\load_premade_map.dm"
-#include "code\modules\overmap\controller\overmap_helpers.dm"
 #include "code\modules\overmap\controller\protagonists.dm"
 #include "code\modules\overmap\controller\setup.dm"
 #include "code\modules\overmap\controller\spacetravel.dm"
