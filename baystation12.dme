@@ -1583,6 +1583,7 @@
 #include "code\modules\overmap\navigation_sensors\waypoint\waypoint_controller\stations.dm"
 #include "code\modules\overmap\navigation_sensors\waypoint\waypoint_controller\vehicles.dm"
 #include "code\modules\overmap\navigation_sensors\waypoint\waypoint_controller\vehicles_sector.dm"
+#include "code\modules\overmap\overcomms\signal.dm"
 #include "code\modules\overmap\overmap_vehicles\_overmap_vehicle.dm"
 #include "code\modules\overmap\overmap_vehicles\bump.dm"
 #include "code\modules\overmap\overmap_vehicles\component.dm"
