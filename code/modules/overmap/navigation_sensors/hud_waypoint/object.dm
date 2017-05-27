@@ -52,11 +52,13 @@
 		all_images += myself_image
 	else
 		//the sprite that will overlay directly on the source
-		var/atom/movable/M = waypoint.get_source()
+		source_image = image(image_icon, waypoint.get_source(), object_icon_state, 10.3)
+
+		/*var/atom/movable/M = waypoint.get_source()
 		source_image = image(image_icon, M, object_icon_state, 10.3)
 		if(istype(M))
 			source_image.pixel_x = M.bound_width / 2
-			source_image.pixel_y = M.bound_height / 2
+			source_image.pixel_y = M.bound_height / 2*/
 		source_image.appearance_flags = RESET_TRANSFORM|RESET_ALPHA
 		all_images += source_image
 
