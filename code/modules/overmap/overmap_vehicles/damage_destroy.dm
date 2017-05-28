@@ -34,7 +34,7 @@
 			M.loc = get_step_rand(centre_turf)
 			M.unset_machine()
 			if(M.client)
-				M.client.view = client_screen_size
+				M.client.view = world.view
 
 		//misc stuff
 		processing_objects.Remove(src)
