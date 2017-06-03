@@ -81,8 +81,8 @@
 	var/time = say_timestamp()
 	src << "[time] [message]"
 
-/mob/proc/hear_radio(var/message, var/verb="says", var/datum/language/language=null, var/part_a, var/part_b, var/mob/speaker = null, var/hard_to_hear = 0, var/vname ="",\
-		var/prob_stars = 0, var/prob_gibberish = 0, language_message = "asdf")
+/mob/proc/hear_radio(var/message, var/verb="says", var/datum/language/language=null, var/message_css, var/freq_text, var/mob/speaker = null, var/hard_to_hear = 0, var/vname ="",\
+		var/prob_stars = 0, var/prob_gibberish = 0, language_message = "wah wah wah")
 
 	if(!client)
 		return
@@ -196,13 +196,10 @@
 		var/understands = 0
 		for(var/datum/language/L in src.languages)
 			if(language.name == L.name)
-				//understands = 1
+				understands = 1
 				break
 		if(!understands && !src.universal_speak)
 			message = language_message//language.scramble(message)
-
-		//language indicator in radio chat
-		part_b += " ([language.name]) "
 
 	if(prob_stars)
 		message = stars(message, max(100 - prob_stars, 1))
@@ -214,19 +211,25 @@
 	if(language)
 		formatted = language.format_message_radio(message, verb)
 	else
-		formatted = "[verb], <span class=\"body\">\"[message]\"</span>"
+		formatted = "[verb], \"[message]\""
+
+	//language name
+	message = " ([language.name]) " + message
+
 	if(sdisabilities & DEAF || ear_deaf)
 		if(prob(20))
 			src << "<span class='warning'>You feel your headset vibrate but can hear nothing from it!</span>"
 	else
-		on_hear_radio(part_a, speaker_name, track, part_b, formatted)
+		on_hear_radio(message_css, freq_text, speaker_name, track, formatted)
 
 /proc/say_timestamp()
 	return "<span class='say_quote'>\[[worldtime2text()]\]</span>"
 
-/mob/proc/on_hear_radio(part_a, speaker_name, track, part_b, formatted)
-	src << "[part_a][speaker_name][part_b][formatted]"
-
+/mob/var/last_radio
+/mob/proc/on_hear_radio(message_css, freq_text, speaker_name, track, formatted)
+	last_radio = "<span class='[message_css]'><b>[freq_text]</b> <span class='name'>[speaker_name]</span> <span class='message'>[formatted]</span></span>"
+	src << last_radio
+/*
 /mob/dead/observer/on_hear_radio(part_a, speaker_name, track, part_b, formatted)
 	src << "[part_a][speaker_name][part_b][formatted]"	//formerly used var/track in place of speaker_name
 
@@ -237,7 +240,7 @@
 /mob/living/silicon/ai/on_hear_radio(part_a, speaker_name, track, part_b, formatted)
 	var/time = say_timestamp()
 	src << "[time][part_a][track][part_b][formatted]"
-
+*/
 /mob/proc/hear_signlang(var/message, var/verb = "gestures", var/datum/language/language, var/mob/speaker = null)
 	if(!client)
 		return

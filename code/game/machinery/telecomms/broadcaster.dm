@@ -306,12 +306,11 @@ var/message_delay = 0 // To make sure restarting the recentmessages list is kept
 				gibberish_message += pick("?","#","@","*","&","^","%","$")
 			gibberish_message += " "
 
-		var/part_a = "<span class='radio'><b>\[[display_freq]\]</b> <span class='name'>"
-		var/part_b = "</span> <span class='message'>"
 		for (var/mob/R in heard_trace)
-			R.hear_radio(gibberish_message, "transmits", null, part_a, part_b, null, 0, "(trace signal)" + create_text_tag("wifi0"), 0)
+			R.hear_radio(gibberish_message, "transmits", null, "radio", "\[[display_freq]\]" + create_text_tag("wifi0"), null, 0, "(trace signal)", 0)
 		for (var/mob/R in heard_encrypt)
-			R.hear_radio("???? ???? ???? ???? ????", "transmits", null, part_a, part_b, null, 0, "(encrypted)", 0)
+			//todo: figure out a nice way to handle range checks here... the way i was thinking of doing it had a performance hit i wasnt happy with
+			R.hear_radio("???? ???? ???? ???? ????", "transmits", null, "radio", "\[[display_freq]\]", null, 0, "(encrypted)", 0)
 
   /* ###### Begin formatting and sending the message ###### */
 	if (length(heard_4bar) || length(heard_3bar) || length(heard_2bar) || length(heard_1bar))
@@ -341,10 +340,7 @@ var/message_delay = 0 // To make sure restarting the recentmessages list is kept
 			freq_text = "[channelname] [display_freq]"
 		else
 			freq_text = display_freq
-
-		//Format it
-		var/part_a = "<span class='[message_css]'><b>\[[freq_text]\]</b> <span class='name'>"
-		var/part_b = "</span> <span class='message'>"
+		freq_text = "\[[freq_text]\]"
 
 		var/language_message = speaking.scramble(message)
 
@@ -353,206 +349,27 @@ var/message_delay = 0 // To make sure restarting the recentmessages list is kept
 		//Perfect reception
 		var/wifichattag = create_text_tag("wifi4")
 		for (var/mob/R in heard_4bar)
-			R.hear_radio(message, verbage, speaking, part_a, part_b, null, 0, identifier + wifichattag, 0, 0, language_message)
+			R.hear_radio(message, verbage, speaking, message_css, freq_text + wifichattag, null, 0, identifier, 0, 0, language_message)
 
 		//3 bars of reception
 		wifichattag = create_text_tag("wifi3")
 		if (length(heard_3bar))
 			for (var/mob/R in heard_3bar)
-				R.hear_radio(message, verbage, speaking, part_a, part_b, null, 0, identifier + wifichattag, 25, 0, language_message)
+				R.hear_radio(message, verbage, speaking, message_css, freq_text + wifichattag, null, 0, identifier, 25, 0, language_message)
 
 		//2 bars of reception
 		wifichattag = create_text_tag("wifi2")
 		if (length(heard_2bar))
 			for (var/mob/R in heard_2bar)
-				R.hear_radio(message, verbage, speaking, part_a, part_b, null, 0, identifier + wifichattag, 50, 0, language_message)
+				R.hear_radio(message, verbage, speaking, message_css, freq_text + wifichattag, null, 0, identifier, 50, 0, language_message)
 
 		//1 bars of reception
 		wifichattag = create_text_tag("wifi1")
 		if (length(heard_1bar))
 			for (var/mob/R in heard_1bar)
-				R.hear_radio(message, verbage, speaking, part_a, part_b, null, 0, identifier + wifichattag, 75, 0, language_message)
+				R.hear_radio(message, verbage, speaking, message_css, freq_text + wifichattag, null, 0, identifier, 75, 0, language_message)
 
 	return 1
-
-/proc/Broadcast_SimpleMessage(var/source, var/frequency, var/text, var/data, var/mob/M, var/compression, var/level)
-
-  /* ###### Prepare the radio connection ###### */
-
-	if(!M)
-		var/mob/living/carbon/human/H = new
-		M = H
-
-	var/datum/radio_frequency/connection = radio_controller.return_frequency(frequency)
-
-	var/display_freq = connection.frequency
-
-	var/list/receive = list()
-
-
-	// --- Broadcast only to intercom devices ---
-
-	if(data == 1)
-		for (var/obj/item/device/radio/intercom/R in connection.devices["[RADIO_CHAT]"])
-			var/turf/position = get_turf(R)
-			if(position && position.z == level)
-				receive |= R.send_hear(display_freq, level)
-
-
-	// --- Broadcast only to intercoms and station-bounced radios ---
-
-	else if(data == 2)
-		for (var/obj/item/device/radio/R in connection.devices["[RADIO_CHAT]"])
-
-			if(istype(R, /obj/item/device/radio/headset))
-				continue
-			var/turf/position = get_turf(R)
-			if(position && position.z == level)
-				receive |= R.send_hear(display_freq)
-
-
-	// --- Broadcast to antag radios! ---
-
-	else if(data == 3)
-		for(var/freq in ANTAG_FREQS)
-			var/datum/radio_frequency/antag_connection = radio_controller.return_frequency(freq)
-			for (var/obj/item/device/radio/R in antag_connection.devices["[RADIO_CHAT]"])
-				var/turf/position = get_turf(R)
-				if(position && position.z == level)
-					receive |= R.send_hear(freq)
-
-
-	// --- Broadcast to ALL radio devices ---
-
-	else
-		for (var/obj/item/device/radio/R in connection.devices["[RADIO_CHAT]"])
-			var/turf/position = get_turf(R)
-			if(position && position.z == level)
-				receive |= R.send_hear(display_freq)
-
-
-  /* ###### Organize the receivers into categories for displaying the message ###### */
-
-	// Understood the message:
-	var/list/heard_normal 	= list() // normal message
-
-	// Did not understand the message:
-	var/list/heard_garbled	= list() // garbled message (ie "f*c* **u, **i*er!")
-	var/list/heard_gibberish= list() // completely screwed over message (ie "F%! (O*# *#!<>&**%!")
-
-	for (var/mob/R in receive)
-
-	  /* --- Loop through the receivers and categorize them --- */
-
-		if (R.client)
-			if(R.client.prefs)
-				if(!(R.client.prefs.toggles & CHAT_RADIO)) //Adminning with 80 people on can be fun when you're trying to talk and all you can hear is radios.
-					continue
-			else
-				log_debug("Client prefs found to be null in /proc/Broadcast_SimpleMessage() for mob [R] and client [R.ckey], this should be investigated.")
-
-
-		// --- Check for compression ---
-		if(compression > 0)
-
-			heard_gibberish += R
-			continue
-
-		// --- Can understand the speech ---
-
-		if (R.say_understands(M))
-
-			heard_normal += R
-
-		// --- Can't understand the speech ---
-
-		else
-			// - Just display a garbled message -
-
-			heard_garbled += R
-
-
-  /* ###### Begin formatting and sending the message ###### */
-	if (length(heard_normal) || length(heard_garbled) || length(heard_gibberish))
-
-	  /* --- Some miscellaneous variables to format the string output --- */
-		var/part_a = "<span class='[frequency_span_class(display_freq)]'><span class='name'>" // goes in the actual output
-		var/freq_text = get_frequency_name(display_freq)
-
-		// --- Some more pre-message formatting ---
-
-		var/part_b_extra = ""
-		if(data == 3) // intercepted radio message
-			part_b_extra = " <i>(Intercepted)</i>"
-
-		// Create a radio headset for the sole purpose of using its icon
-		var/obj/item/device/radio/headset/radio = new
-
-		var/part_b = "</span><b> \icon[radio]\[[freq_text]\][part_b_extra]</b> <span class='message'>" // Tweaked for security headsets -- TLE
-		var/part_blackbox_b = "</span><b> \[[freq_text]\]</b> <span class='message'>" // Tweaked for security headsets -- TLE
-		var/part_c = "</span></span>"
-
-		var/blackbox_msg = "[part_a][source][part_blackbox_b]\"[text]\"[part_c]"
-
-		//BR.messages_admin += blackbox_admin_msg
-		if(istype(blackbox))
-			switch(display_freq)
-				if(PUB_FREQ)
-					blackbox.msg_common += blackbox_msg
-				if(SCI_FREQ)
-					blackbox.msg_science += blackbox_msg
-				if(COMM_FREQ)
-					blackbox.msg_command += blackbox_msg
-				if(MED_FREQ)
-					blackbox.msg_medical += blackbox_msg
-				if(ENG_FREQ)
-					blackbox.msg_engineering += blackbox_msg
-				if(SEC_FREQ)
-					blackbox.msg_security += blackbox_msg
-				if(DTH_FREQ)
-					blackbox.msg_deathsquad += blackbox_msg
-				if(SYND_FREQ)
-					blackbox.msg_syndicate += blackbox_msg
-				if(SUP_FREQ)
-					blackbox.msg_cargo += blackbox_msg
-				if(SRV_FREQ)
-					blackbox.msg_service += blackbox_msg
-				else
-					blackbox.messages += blackbox_msg
-
-		//End of research and feedback code.
-
-	 /* ###### Send the message ###### */
-
-		/* --- Process all the mobs that heard the voice normally (understood) --- */
-
-		if (length(heard_normal))
-			var/rendered = "[part_a][source][part_b]\"[text]\"[part_c]"
-
-			for (var/mob/R in heard_normal)
-				R.show_message(rendered, 2)
-
-		/* --- Process all the mobs that heard a garbled voice (did not understand) --- */
-			// Displays garbled message (ie "f*c* **u, **i*er!")
-
-		if (length(heard_garbled))
-			var/quotedmsg = "\"[stars(text)]\""
-			var/rendered = "[part_a][source][part_b][quotedmsg][part_c]"
-
-			for (var/mob/R in heard_garbled)
-				R.show_message(rendered, 2)
-
-
-		/* --- Complete gibberish. Usually happens when there's a compressed message --- */
-
-		if (length(heard_gibberish))
-			var/quotedmsg = "\"[Gibberish(text, compression + 50)]\""
-			var/rendered = "[part_a][Gibberish(source, compression + 50)][part_b][quotedmsg][part_c]"
-
-			for (var/mob/R in heard_gibberish)
-				R.show_message(rendered, 2)
-
-//Use this to test if an obj can communicate with a Telecommunications Network
 
 /atom/proc/test_telecomms()
 	var/datum/signal/signal = src.telecomms_process()
