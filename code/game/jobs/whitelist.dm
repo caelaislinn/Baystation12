@@ -19,6 +19,7 @@ var/list/whitelist = list()
 		else
 			whitelist[name_and_job[1]] += list(name_and_job[2])
 
+//a job whitelist
 /proc/check_whitelist(mob/M , var/rank)
 	if(!whitelist)
 		return 0

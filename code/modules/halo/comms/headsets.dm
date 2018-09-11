@@ -37,3 +37,6 @@
 /obj/item/device/radio/headset/police
 	ks2type = /obj/item/device/encryptionkey/police
 	icon_state = "sec_headset"
+
+//todo
+/obj/item/device/radio/headset/spartan
