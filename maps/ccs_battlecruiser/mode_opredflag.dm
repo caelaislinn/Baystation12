@@ -28,13 +28,17 @@
 	var/round_completion_delay = 0
 
 /datum/game_mode/opredflag/pre_setup()
-	. = ..()
+	//world << "/datum/game_mode/opredflag/pre_setup()"
+	var/retval = ..()
+	. = retval
 
 	round_start = world.time
 
 	//grab the prophets
 	for(var/datum/antagonist/opredflag_prophet/prophets in antag_templates)
+		//world << "	check1"
 		for(var/datum/mind/D in prophets.current_antagonists)
+			//world << "	[D] ([D.ckey])"
 			living_prophets.Add(D)
 
 	//grab the spartan list

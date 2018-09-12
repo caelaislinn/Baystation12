@@ -11,3 +11,4 @@
 	generate_email = 0
 	whitelisted_species = list(/datum/species/kig_yar)
 	spawn_positions = -1
+	track_players = 1

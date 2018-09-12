@@ -12,6 +12,7 @@
 	whitelisted_species = list(/datum/species/unggoy)
 	spawn_positions = -1
 	total_positions = -1
+	track_players = 1
 
 /datum/job/opredflag_grunt/major
 	title = "Unggoy Major"

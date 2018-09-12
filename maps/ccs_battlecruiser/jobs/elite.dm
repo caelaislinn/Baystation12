@@ -12,6 +12,7 @@
 	whitelisted_species = list(/datum/species/sangheili)
 	total_positions = 10
 	spawn_positions = 10
+	track_players = 1
 
 /datum/job/opredflag_elite/major
 	title = "Sangheili Major"
@@ -35,7 +36,6 @@
 	outfit_type = /decl/hierarchy/outfit/sangheili/zealot
 	total_positions = 1
 	spawn_positions = 1
-	track_players = 1
 
 /datum/job/opredflag_elite/zealot
 	title = "Sangheili Zealot"
