@@ -25,42 +25,30 @@
 	var/list/dead_spartans = list()
 
 	var/round_start = 0
-	var/round_completion_delay = 0
-
+	var/round_completion_delay = 150
+/*
 /datum/game_mode/opredflag/pre_setup()
-	//world << "/datum/game_mode/opredflag/pre_setup()"
+	world << "/datum/game_mode/opredflag/pre_setup()"
 	var/retval = ..()
 	. = retval
+*/
+/datum/game_mode/opredflag/post_setup()
+	. = ..()
 
 	round_start = world.time
 
 	//grab the prophets
 	for(var/datum/antagonist/opredflag_prophet/prophets in antag_templates)
-		//world << "	check1"
-		for(var/datum/mind/D in prophets.current_antagonists)
-			//world << "	[D] ([D.ckey])"
+		world << "	check1"
+		for(var/D in prophets.current_antagonists)
+			world << "	[D]"
 			living_prophets.Add(D)
 
 	//grab the spartan list
 	var/datum/job/spartans = job_master.occupations_by_title["Spartan II"]
-	living_spartans = spartans.assigned_players
-	spartans = job_master.occupations_by_title["Spartan II Commander"]
 	living_spartans += spartans.assigned_players
-
 	//dont let spartans latejoin
 	spartans.total_positions = -1
-
-/datum/game_mode/opredflag/fail_setup()
-	. = ..()
-
-	//let spartans join again
-	var/datum/job/spartans = job_master.occupations_by_title["Spartan II"]
-	spartans.total_positions = -1
-
-/datum/game_mode/opredflag/post_setup()
-	. = ..()
-
-	//grab some stuff we need for round completion
 
 	//grab the elite shipmaster
 	var/datum/job/opredflag_elite/shipmaster = job_master.occupations_by_title["Sangheili Shipmaster"]
