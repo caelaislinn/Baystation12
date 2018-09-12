@@ -112,7 +112,7 @@
 
 	text += "The Prophets were:<br>"
 	for(var/datum/mind/D in living_prophets)
-		text += "<br>[D] (played by [D.ckey])"
+		text += "<br>[D] (played by [D.key])"
 	for(var/mob/living/simple_animal/P in dead_prophets)
 		text += "<br>[P] (played by [P.ckey])(slain)"
 	text += "<br>"
