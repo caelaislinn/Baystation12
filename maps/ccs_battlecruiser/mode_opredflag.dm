@@ -39,9 +39,7 @@
 
 	//grab the prophets
 	for(var/datum/antagonist/opredflag_prophet/prophets in antag_templates)
-		world << "	check1"
 		for(var/D in prophets.current_antagonists)
-			world << "	[D]"
 			living_prophets.Add(D)
 
 	//grab the spartan list
@@ -70,12 +68,14 @@
 
 /datum/game_mode/opredflag/handle_mob_death(var/mob/M, var/list/args = list())
 	if(istype(M, /mob/living/simple_animal/prophet))
-		living_prophets -= M
+		if(M.mind && M.mind in living_prophets)
+			living_prophets -= M.mind
 		dead_prophets += M
 		return 1
 
 	if(istype(M, /mob/living/carbon/human/spartan))
-		living_spartans -= M
+		if(M.mind && M.mind in living_spartans)
+			living_spartans -= M.mind
 		dead_spartans += M
 		return 1
 

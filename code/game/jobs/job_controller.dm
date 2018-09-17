@@ -105,7 +105,7 @@ var/global/datum/controller/occupations/job_master
 				unassigned -= player
 				job.current_positions++
 				if(job.track_players)
-					job.assigned_players.Add(player)
+					job.assigned_players.Add(player.mind)
 				return 1
 		Debug("AR has failed, Player: [player], Rank: [rank]")
 		return 0

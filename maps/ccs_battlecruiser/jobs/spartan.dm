@@ -16,6 +16,7 @@
 
 /datum/job/opredflag_spartan/commander
 	title = "Spartan II Commander"
+	supervisors = "UNSC High Command"
 	total_positions = 1
 	spawn_positions = 1
 
