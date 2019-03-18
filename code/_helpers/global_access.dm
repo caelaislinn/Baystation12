@@ -743,6 +743,8 @@
 			return global.mob_hat_cache;
 		if("mob_repository")
 			return global.mob_repository;
+		if("mobs_in_sectors")
+			return global.mobs_in_sectors;
 		if("motion_alarm")
 			return global.motion_alarm;
 		if("moving_levels")
@@ -1970,6 +1972,8 @@
 			global.mob_hat_cache=newval;
 		if("mob_repository")
 			global.mob_repository=newval;
+		if("mobs_in_sectors")
+			global.mobs_in_sectors=newval;
 		if("motion_alarm")
 			global.motion_alarm=newval;
 		if("moving_levels")
@@ -2825,6 +2829,7 @@
 	"minor_announcement",
 	"mob_hat_cache",
 	"mob_repository",
+	"mobs_in_sectors",
 	"motion_alarm",
 	"moving_levels",
 	"multi_point_spawns",
