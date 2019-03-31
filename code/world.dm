@@ -1,6 +1,6 @@
 #define WORLD_ICON_SIZE 32
 
-/var/server_name = "Halo Spacestation Evolved"
+/var/server_name = "The SCOM Project"
 
 /var/game_id = null
 /hook/global_init/proc/generate_gameid()

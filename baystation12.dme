@@ -2780,7 +2780,7 @@
 #include "interface\skin.dmf"
 #include "maps\_map_include.dm"
 #include "maps\_gamemodes\faction.dm"
-#include "maps\first_contact\first_contact.dm"
+#include "maps\scom\_scom.dm"
 #include "maps\~mapsystem\map_preferences.dm"
 #include "maps\~mapsystem\map_ranks.dm"
 #include "maps\~mapsystem\maps.dm"

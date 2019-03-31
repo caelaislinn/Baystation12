@@ -30,6 +30,14 @@
 	if(istype(mob_containing))
 		mob_containing.adjustFireLoss(alt_explosion_damage_max)
 		to_chat(mob_containing,"<span class = 'danger'>[src] explodes! The immense heat burns through your flesh...</span>")
+
+		for(var/obj/item/organ/external/o in mob_containing.bad_external_organs)
+			for(var/datum/wound/w in o.wounds)
+				for(var/obj/embedded in w.embedded_objects)
+					if(embedded == src)
+						w.embedded_objects -= embedded //Removing the embedded item from the wound
+		mob_containing.contents -= src
+		loc = mob_containing.loc //And placing it on the ground below
 	else
 		for(var/mob/living/hit_mob in range(alt_explosion_range,src))
 			hit_mob.adjustFireLoss(alt_explosion_damage_max/2)
@@ -59,13 +67,6 @@
 			if(dist <= round(max_range + world.view - 2, 1))
 				M.playsound_local(epicenter, 'code/modules/halo/sounds/Plasmanadedetonate.ogg', 100, 1)
 
-	for(var/obj/item/organ/external/o in mob_containing.bad_external_organs)
-		for(var/datum/wound/w in o.wounds)
-			for(var/obj/embedded in w.embedded_objects)
-				if(embedded == src)
-					w.embedded_objects -= embedded //Removing the embedded item from the wound
-	mob_containing.contents -= src
-	loc = mob_containing.loc //And placing it on the ground below
 	qdel(src)
 
 /obj/item/weapon/grenade/plasma/heavy_plasma

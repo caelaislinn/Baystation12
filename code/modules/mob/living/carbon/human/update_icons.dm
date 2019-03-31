@@ -171,8 +171,11 @@ Please contact me on #coderbus IRC. ~Carn x
 
 		else
 
-			icon = stand_icon
-			icon_state = null
+			if(override_icon)
+				icon = override_icon
+			else
+				icon = stand_icon
+			icon_state = override_icon_state
 
 			for(var/entry in overlays_standing)
 				if(istype(entry, /image))

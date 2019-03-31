@@ -72,6 +72,7 @@ var/global/datum/halo_frequencies/halo_frequencies = new()
 
 	//shared human and covenant civilian frequency
 	frequencies_human[CIV_NAME] = civ_freq
+	all_frequencies[CIV_NAME] = civ_freq
 
 	//covenant frequencies
 	for(var/cur_freq_name in frequencies_cov)
