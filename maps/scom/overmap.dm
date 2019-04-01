@@ -43,16 +43,6 @@
 /datum/map/scom_project/New()
 	. = ..()
 
-	//spawn in comms
-	new /obj/item/device/mobilecomms/commsbackpack/covenant(locate(1,1,1))
-	new /obj/item/device/mobilecomms/commsbackpack/sec/permanent(locate(1,1,1))
-
-	//I DONT CARE THIS IS HAPPENING
-	//I WILL REMOVE UNDERWEAR IF I HAVE TO DO IT TO EVERY MOB ON THE SERVER
-	var/datum/species/S = all_species["Human"]
-	S.appearance_flags = HAS_HAIR_COLOR | HAS_SKIN_TONE | HAS_LIPS | HAS_EYE_COLOR// | HAS_UNDERWEAR
-
-
 /lobby_music/breaking_ground
 	artist = "Michael McCann"
 	title = "Breaking Ground"
