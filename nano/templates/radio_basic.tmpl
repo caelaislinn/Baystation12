@@ -99,8 +99,8 @@ Used In File(s): /code/game/objects/item/devices/radio/radio.dm
 			<span class='{{:value.chan_span}}'>&#9724</span> {{:value.channel_freq}} {{:value.channel_name}}
 		</div>
 		<div class="itemContentMedium">
-			{{:helper.link('On', null, {'toggle_channel' : value.channel_name}, value.listening ? null : 'selected')}}
-			{{:helper.link('Off', null, {'toggle_channel' : value.channel_name}, value.listening ? 'selected' : null)}}
+			{{:helper.link('On', null, {'toggle_channel' : value.channel_name}, value.listening ? 'selected' : null)}}
+			{{:helper.link('Off', null, {'toggle_channel' : value.channel_name}, value.listening ? null : 'selected')}}
 		</div>
 	{{/for}}
 {{/if}}
