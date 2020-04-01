@@ -39,6 +39,8 @@
 
 	var/list/ui_channels = list()
 
+	var/debug_me = 0
+
 /obj/item/device/radio/proc/set_frequency(new_frequency)
 	radio_controller.remove_object(src, frequency)
 	frequency = new_frequency
@@ -268,40 +270,45 @@
 	radio_controller.remove_object(src, cipher.frequency)
 	return 1
 
+/obj/item/device/radio/proc/message_debug(var/debug_message)
+	if(Debug2 && debug_me)
+		var/turf/myturf = get_turf(src)
+		to_debug_listeners("RADIO: ([myturf.x],[myturf.y],[myturf.z]) [debug_message]")
+
 /obj/item/device/radio/talk_into(mob/living/M as mob, message, var/hotkey, var/speaking_verb = "says", var/datum/language/speaking = null)
 	if(!on) return 0 // the device has to be on
-	//  Fix for permacell radios, but kinda eh about actually fixing them.
-	if(!M || !message) return 0
+
+	if(!M || !message)
+		message_debug("no mob or message")
+		return 0
 
 	if(speaking && (speaking.flags & (NONVERBAL|SIGNLANG))) return 0
 
 	if(istype(M)) M.trigger_aiming(TARGET_CAN_RADIO)
 
-	//  Uncommenting this. To the above comment:
-	// 	The permacell radios aren't suppose to be able to transmit, this isn't a bug and this "fix" is just making radio wires useless. -Giacom
 	if(wires.IsIndexCut(WIRE_TRANSMIT)) // The device has to have all its wires and shit intact
+		message_debug("transmit wire cut")
 		return 0
 
 	if(!radio_connection)
 		set_frequency(frequency)
 
-	/* Quick introduction:
-		This new radio system uses a very robust FTL signaling technology unoriginally
-		dubbed "subspace" which is somewhat similar to 'blue-space' but can't
-		actually transmit large mass. Headsets are the only radio devices capable
-		of sending subspace transmissions to the Communications Satellite.
-
-		A headset sends a signal to a subspace listener/reciever elsewhere in space,
-		the signal gets processed and logged, and an audible transmission gets sent
-		to each individual headset.
+	/*
+	See code/controller/communications.dm for the meat and potatoes of the radio code
+	Quick summary:
+	1. Mob works out what radio hotkey the player is using
+	2. Radio grabs a corresponding radio key for the hotkey
+	3. A radio chat signal is constructed for the matching radio key and sent to the frequency
+	4. The frequency datum gets a list of hearing players (on the overmap), then sends the message to their chat logs
 	*/
 
 	//#### Grab the connection datum ####//
 	var/datum/radio_frequency/connection// = secure_radio_connections[channel]
 
-	//the dongle may be useful in identifying the connection
+	//the dongle may be necessary to identify the connection
 	var/obj/item/device/channel_dongle/active_dongle
 
+	//mob code has already sent he chat message to the correct ear
 	if(hotkey in list(HOTKEY_HEADSET, HOTKEY_RIGHTEAR, HOTKEY_LEFTEAR))
 		//loop over radio connections and find the first active one
 		for(var/obj/item/device/channel_dongle/dongle in dongles_connections)
@@ -324,6 +331,7 @@
 
 	//guess this isn't a valid hotkey
 	if (!istype(connection))
+		message_debug("no connection")
 		return 0
 
 
@@ -393,7 +401,8 @@
 	signal.frequency = connection.frequency // Quick frequency set
 
 
-  //#### Sending the signal to all subspace receivers ####//
+	//#### Sending the signal to all subspace receivers ####//
+	message_debug(" post_signal() success")
 	connection.post_signal(src, signal, RADIO_CHAT)
 
 

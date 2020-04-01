@@ -273,6 +273,8 @@ var/global/datum/controller/radio/radio_controller
 		filter = RADIO_DEFAULT
 	send_to_filter(signal, filter, source, range)
 
+/obj/item/device/radio/var/global/debug_global_radios = 0
+
 //Sends a signal to all machines belonging to a given filter. Should be called by post_signal()
 /datum/radio_frequency/proc/send_to_filter(datum/signal/signal, var/filter, obj/source as obj|null, var/transmit_global = 0)
 
@@ -281,10 +283,17 @@ var/global/datum/controller/radio/radio_controller
 	var/obj/effect/overmap/source_sector = map_sectors["[source_turf.z]"]
 	var/list/broadcasting_sectors = list()
 
+	//for debug purposes
+	if(istype(source, /obj/item/device/radio))
+		var/obj/item/device/radio/debug_radio = source
+		transmit_global = debug_radio.debug_global_radios
+
 	//let's check for nearby telecomms machinery which will interact with the signal
 	for(var/obj/effect/overmap/nearby_sector in range(7, source_sector))
 
 		//check for jammers
+		//disabled for testing
+		/*
 		for(var/obj/machinery/overmap_comms/jammer/tj in nearby_sector.telecomms_jammers)
 			if(!tj.active)
 				continue
@@ -302,8 +311,10 @@ var/global/datum/controller/radio/radio_controller
 				show_image(M, speech_bubble)
 				to_chat(M, "\icon[source] <span class='danger'>[source] emits a loud screeching wail!</span>")
 			return
+			*/
 
 		//check for receivers
+		var/sector_finished = 0
 		for(var/obj/machinery/overmap_comms/receiver/receiver in nearby_sector.telecomms_receivers)
 
 			//will this receiever broadcast the signal globally?
@@ -313,8 +324,12 @@ var/global/datum/controller/radio/radio_controller
 				transmit_global = 1
 				broadcasting_sectors |= nearby_sector
 
-				//go to the next sector
+				//dont need to scan this sector any further
+				sector_finished = 1
 				break
+
+		if(sector_finished)
+			break
 
 		//backwards compatibility: the old code used relays, so check if those exist and are active
 		for(var/obj/machinery/telecomms/relay/relay in nearby_sector.telecomms_receivers)
@@ -322,12 +337,15 @@ var/global/datum/controller/radio/radio_controller
 				transmit_global = 1
 				broadcasting_sectors |= nearby_sector
 
+				//dont need to scan this sector any further
+				break
+
 	//see which devices are in range
 	var/list/listening_sectors = list()
 	var/list/radios = list()
 	var/list/radios_garbled = list()
 	var/list/radios_out_of_range = list()
-	var/list/radios_encrypted = list()
+	//var/list/radios_encrypted = list()
 
 	for(var/obj/check_obj in devices[filter])
 		var/finished = 0
@@ -336,6 +354,8 @@ var/global/datum/controller/radio/radio_controller
 		var/turf/obj_turf = get_turf(check_obj)
 
 		//first do a special encryption check for radios... other devices can do their own encryption checks
+		//disabled for testing
+		/*
 		if(istype(check_obj, /obj/item/device/radio))
 			var/obj/item/device/radio/R = check_obj
 			var/datum/channel_cipher/cipher = signal.data["cipher"]
@@ -350,12 +370,14 @@ var/global/datum/controller/radio/radio_controller
 					if(hear_dist <= OVERMAP_RADIO_FAR)
 						radios_encrypted.Add(check_obj)
 				finished = 1
+				*/
 
 		//we can do a shortcut here to skip further processing if it's an encrypted radio signal
 		if(!finished)
 			if(transmit_global)
 				//no interference
 				finished = 1
+				radios.Add(check_obj)
 			else
 				//if it's in short range
 				var/obj/effect/overmap/radio_sector = map_sectors["[obj_turf.z]"]
@@ -364,10 +386,22 @@ var/global/datum/controller/radio/radio_controller
 					//no interference
 					finished = 1
 					radios.Add(check_obj)
+					if(Debug2)
+						if(istype(source, /obj/item/device/radio))
+							var/obj/item/device/radio/debug_radio = source
+							if(debug_radio.debug_me)
+								var/turf/myturf = get_turf(check_obj)
+								to_debug_listeners("RADIO: ([myturf.x],[myturf.y],[myturf.z]) is in close range")
 
 				else if(hear_dist <= OVERMAP_RADIO_FAR)
 					finished = 1
 					radios.Add(check_obj)
+					if(Debug2)
+						if(istype(source, /obj/item/device/radio))
+							var/obj/item/device/radio/debug_radio = source
+							if(debug_radio.debug_me)
+								var/turf/myturf = get_turf(check_obj)
+								to_debug_listeners("RADIO: ([myturf.x],[myturf.y],[myturf.z]) is in far range")
 
 					//interference depending on distance
 					var/dist_ratio = (hear_dist - OVERMAP_RADIO_CLOSE) / (OVERMAP_RADIO_FAR - OVERMAP_RADIO_CLOSE)
@@ -381,7 +415,9 @@ var/global/datum/controller/radio/radio_controller
 			listening_sectors[radio_sector].Add(check_obj)
 
 	//now check to find jammers that are blocking incoming radio signals
-	//the assumption here is that there are less jammers than radios
+	//the assumption here for optimisation purposes is that there are less jammers than radios
+	//disabled for testing
+	/*
 	if(transmit_global)
 		for(var/obj/machinery/overmap_comms/jammer/tj in GLOB.telecoms_jammers)
 			if(!tj.active)
@@ -400,6 +436,7 @@ var/global/datum/controller/radio/radio_controller
 					radios_out_of_range -= listening_sectors[nearby_sector]
 					radios_garbled -= listening_sectors[nearby_sector]
 					radios_encrypted -= listening_sectors[nearby_sector]
+					*/
 
 	//send the signal for the devices to do their own processing
 	//note that receive_signal() for radios above specifically does not output any chat messages to players
