@@ -278,6 +278,8 @@ var/global/datum/controller/radio/radio_controller
 //Sends a signal to all machines belonging to a given filter. Should be called by post_signal()
 /datum/radio_frequency/proc/send_to_filter(datum/signal/signal, var/filter, obj/source as obj|null, var/transmit_global = 0)
 
+	to_debug_listeners("[signal], [filter], [source], [transmit_global]")
+
 	//grab some useful info
 	var/turf/source_turf = get_turf(source)
 	var/obj/effect/overmap/source_sector = map_sectors["[source_turf.z]"]
@@ -440,6 +442,8 @@ var/global/datum/controller/radio/radio_controller
 					radios_garbled -= listening_sectors[nearby_sector]
 					radios_encrypted -= listening_sectors[nearby_sector]
 					*/
+
+	to_debug_listeners("send_to_filter() success, radios.len:[radios.len]")
 
 	//send the signal for the devices to do their own processing
 	//note that receive_signal() for radios above specifically does not output any chat messages to players

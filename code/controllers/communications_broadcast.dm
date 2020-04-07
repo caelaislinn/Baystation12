@@ -19,6 +19,8 @@
 	var/list/heard_out_of_range	= list()	// completely screwed over message (ie "F%! (O*# *#!<>&**%!")
 	var/list/heard_encrypted	= list()	// dont have the encryption cipher for this signal
 
+	to_debug_listeners("get_mobs_in_radio_ranges(radios):[receive.len]")
+
 	for (var/mob/R in receive)
 
 	  /* --- Loop through the receivers and categorize them --- */
@@ -86,6 +88,8 @@
 
 
 		/* --- Process all the mobs that heard the voice normally (understood) --- */
+
+		to_debug_listeners("length(heard_normal):[length(heard_normal)]")
 
 		if (length(heard_normal))
 			for (var/mob/R in heard_normal)
