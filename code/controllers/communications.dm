@@ -350,6 +350,9 @@ var/global/datum/controller/radio/radio_controller
 	for(var/obj/check_obj in devices[filter])
 		var/finished = 0
 
+		if(!check_obj)
+			continue
+
 		//if the signal is being broadcast, then everyone will hear it globally with perfect clarity
 		var/turf/obj_turf = get_turf(check_obj)
 

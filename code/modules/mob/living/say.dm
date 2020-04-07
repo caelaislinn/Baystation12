@@ -94,12 +94,15 @@
 	//remove the radio hotkey from the message
 	if (message_mode)
 		if(message_mode == ";")
-			message = copytext(message,2)
+			message = copytext(message, 2)
 		else
-			message = copytext(message,3)
+			message = copytext(message, 3)
 
 	//remove any leftover whitespace
 	message = trim_left(message)
+
+	if(message_mode && Debug2)
+		to_debug_listeners("message_mode:[message_mode] | message:[message]")
 
 	//identify and remove a language hotkey
 	if(!speaking)
