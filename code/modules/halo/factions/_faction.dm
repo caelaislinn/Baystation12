@@ -8,7 +8,6 @@
 	var/list/objectives_without_targets = list()
 	var/list/assigned_minds = list()
 	var/list/living_minds = list()
-	var/list/defender_mob_types = list()
 	var/max_points = 0
 	var/ignore_players_dead = 0
 	var/obj/effect/overmap/flagship
@@ -17,9 +16,11 @@
 	var/archived_flagship_name = "NA_FLAGSHIP_NAME"
 	var/list/enemy_factions = list()
 	var/list/angry_factions = list()
-	var/list/active_quests = list()
-	var/list/accepted_quests = list()
-	var/list/completed_quests = list()
+
+	var/list/all_quests = list()
+	var/list/available_quests = list()
+	var/list/processing_quests = list()
+
 	var/datum/job/commander_job		//this needs to be set in the gamemode code
 	var/commander_titles = list()	//checks in order of priority for objective purposes
 	var/has_flagship = 0
@@ -40,6 +41,8 @@
 	var/quest_interval_max = 5 MINUTES
 	var/gear_supply_type
 	var/default_radio_channel = RADIO_HUMAN
+
+	var/list/listening_programs = list()
 
 /datum/faction/New()
 	. = ..()
