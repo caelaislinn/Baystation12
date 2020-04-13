@@ -1,5 +1,5 @@
 
-/obj/structure/covenant_comms_tower
+/obj/machinery/overmap_comms/receiver/battlenet
 	name = "Battlenet transmitter"
 	icon = 'comms.dmi'
 	icon_state = "comms"
