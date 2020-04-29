@@ -33,7 +33,7 @@
 		ELECTION, GOSSIP, CELEBRITY_DEATH, RESIGNATION)
 
 /datum/trade_destination/new_carthage
-	name = "New Charthage"
+	name = "New Carthage"
 	description = "A rich, safe inner colony."
 	distance = 1.1
 	viable_mundane_events = list(RESEARCH_BREAKTHROUGH, BARGAINS, SONG_DEBUT, MOVIE_RELEASE,\
