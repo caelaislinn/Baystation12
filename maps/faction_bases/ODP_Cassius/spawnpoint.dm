@@ -13,7 +13,6 @@ GLOBAL_LIST_EMPTY(unsc_base_fallback_spawns)
 
 /datum/spawnpoint/unsc_base_fallback
 	display_name = "UNSC Base Fallback Spawns"
-	restrict_job_type = list(/datum/job/unsc)
 	restrict_job_type = list(\
 	/datum/job/unsc/marine,
 	/datum/job/unsc/marine/specialist,
