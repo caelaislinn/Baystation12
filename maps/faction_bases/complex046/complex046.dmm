@@ -285,6 +285,7 @@
 "fy" = (/obj/structure/ai_routing_node/unsc,/turf/simulated/floor/reinforced,/area/faction_base/oni)
 "fz" = (/obj/machinery/light/colored/green{tag = "icon-green1 (WEST)"; icon_state = "green1"; dir = 8},/turf/simulated/floor/reinforced,/area/faction_base/oni)
 "fA" = (/obj/effect/floor_decal/industrial/outline/blue,/obj/payload{anchored = 1; free_explode = 1},/turf/simulated/floor/reinforced,/area/faction_base/oni)
+"fB" = (/obj/machinery/photocopier/faxmachine/unsc{dir = 8},/obj/machinery/light,/turf/simulated/floor/tech/gray,/area/space)
 
 (1,1,1) = {"
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
@@ -318,7 +319,7 @@ axbfbhbhbQbQbRbSbTbUbRbhbhbhbVbfbxbWbCbCbxbCbCbCbCbXbxbYbZcabxbFcbcccccccccccdbF
 axbfbfbfcmbhbfbfbfbfbfbfcnbfbfbfbxcocpbCcqbCbCcrbCbCcsbCbCbXbxbFctcucccvcccvcwbFbJcybFczcgcgcAbNbNbNaa
 axbfbfcBbhbhcBcCbhcDbfcEbhbhbjbfbxcFcGcHbxbCbCbxevevbxbCbCcJbxbFcKcLcMcNcOcPcQbFbJbJbFcRcgcgclbNbNbNaa
 axbfbfcSbhbhcTcUbhbmbffkbhfkcVbfbxcWcWcWbCbCbCevbCcXbxbCbCcYbxbFcccZcccZcccZccbFbJftbFbNbNbNbNbNbNbNaa
-axbfbfdabhbhbhdfbhbnbffkbhfkcVbfbxdgbCbCbCbCbCevdhbCbxbCbCdibxbFdjccccccccccdjbFdkbJbFeEeEeEeEeEeEeEeE
+axbfbfdabhbhbhdfbhbnbffkbhfkcVbfbxdgbCbCbCbCbCevdhbCbxbCbCdibxbFfBccccccccccdjbFdkbJbFeEeEeEeEeEeEeEeE
 axbfbfcSbhbhcTcUbhbmbffkbhfkcVbfbxdmbCbCbCdncXbxevevbxbCbCdobxbFbFbFbFdpccbFbFbFbJbJbFeEeFeFeFeFeFeFeE
 axbfbfdqbhbhdqdrdscDbffkbRfkcVbfbxdtbCbCdudvbCevbCcXbxbCbCdwbxbFdxdydzbJbJdAbJbJbJbJbFeEeFeFeFeFeFeFeE
 axbfbfbfbfbfbfbfbfbfbfbfbfbfbfbfbxdBbCbCdCdEbCevdhbCbxdGbCdYbxbFebbJbJecbJbJbJedbJcybFeEeFeFeFeFeFeFeE
