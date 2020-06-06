@@ -10,7 +10,7 @@
 
 /area/faction_base/oni/garage
 	name = "ONI Base Garage"
-	icon_state = "garage"
+	icon_state = "vehicleshop"
 
 /area/faction_base/oni/barracks
 	name = "ONI Base Barracks"

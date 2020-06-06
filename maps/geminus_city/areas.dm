@@ -224,7 +224,7 @@
 
 /area/planets/Geminus/outdoor/spaceport
 	name = "\improper Spaceport"
-	icon_state = "green"
+	icon_state = "hangar"
 
 //COLONY MAC//
 /area/planets/Geminus/outdoor/MAC
