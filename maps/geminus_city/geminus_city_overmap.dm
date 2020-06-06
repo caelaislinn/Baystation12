@@ -27,3 +27,5 @@
 
 /obj/effect/landmark/artifact_spawn
 	name = "Post-Scan Artifact Spawn"
+	icon = 'maps/geminus_city/landmark.dmi'
+	icon_state = "artifact"
