@@ -679,7 +679,7 @@ var/global/datum/controller/occupations/job_master
 		else if(retval != "disabled")
 			error_message = "JOBMASTER WARNING: Spawnpoint set to \'[spawnpoint_id]\', yet spawning as \'[job_datum ? job_datum.type : "NULL JOB"]\' is blocked! Reason: [retval] (client: [C])"
 	else
-		error_message = "JOBMASTER ERROR: Spawnpoint set to [spawnpoint_id], yet spawnpoint does not exist!</span> (job:[job_datum.type], client: [C])"
+		error_message = "JOBMASTER ERROR: Spawnpoint set to [spawnpoint_id], yet spawnpoint does not exist! (job:[job_datum.type], client: [C])"
 
 	if(error_message)
 		if(Debug2)
