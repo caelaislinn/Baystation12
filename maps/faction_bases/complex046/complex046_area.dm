@@ -7,6 +7,7 @@
 	poweralm = 1
 	requires_power = 0
 	icon_state = "green"
+	base_turf = /turf/unsimulated/floor/dirt
 
 /area/faction_base/oni/garage
 	name = "ONI Base Garage"
