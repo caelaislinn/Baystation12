@@ -1028,7 +1028,7 @@
 "atN" = (/obj/effect/floor_decal/industrial/warning{icon_state = "warning"; dir = 6},/turf/simulated/floor/plating,/area/planets/Geminus/outdoor/MAC)
 "atO" = (/obj/machinery/light/small/red{tag = "icon-firelight1"; icon_state = "firelight1"; dir = 2},/turf/simulated/floor/planet/dirt,/area/planets/Geminus/outdoor/MAC)
 "atP" = (/turf/simulated/floor/pavement/corner{tag = "icon-pave_corner (WEST)"; icon_state = "pave_corner"; dir = 8},/area/planets/Geminus/outdoor/west)
-"atQ" = (/obj/structure/bumpstairs/road/gem_oni{dir = 1},/turf/simulated/floor/pavement/empty,/area/planets/Geminus)
+"atQ" = (/obj/structure/bumpstairs/road/gem_oni{dir = 1; faction_restrict = "UNSC"},/turf/simulated/floor/pavement/empty,/area/planets/Geminus)
 "atR" = (/turf/simulated/floor/decor{color = "#cccccc"; icon_state = "square_grey"; tag = "icon-tiled1"},/area/planets/Geminus)
 "atS" = (/turf/simulated/floor/pavement{tag = "icon-pavement (EAST)"; icon_state = "pavement"; dir = 4},/area/planets/Geminus)
 "atT" = (/obj/machinery/door/airlock/security{name = "Landing Pad"},/obj/machinery/door/blast/regular{density = 0; icon_state = "pdoor0"; id = "landp_lock"; name = "MAC Shutter"; opacity = 0},/turf/simulated/floor/tiled/dark,/area/planets/Geminus/outdoor/MAC)

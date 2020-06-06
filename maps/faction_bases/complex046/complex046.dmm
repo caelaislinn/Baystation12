@@ -265,7 +265,7 @@
 "fe" = (/obj/structure/ai_routing_node/unsc,/turf/simulated/floor/reinforced,/area/faction_base/oni/research)
 "ff" = (/turf/unsimulated/floor/chasm,/area/faction_base/oni/digsite)
 "fg" = (/obj/machinery/light{dir = 4; icon_state = "tube1"},/turf/simulated/floor/tiled/dark,/area/faction_base/oni/hangar)
-"fh" = (/obj/structure/bumpstairs/road/oni_gem,/turf/simulated/floor/pavement/empty,/area/faction_base/oni)
+"fh" = (/obj/structure/bumpstairs/road/oni_gem{faction_restrict = "UNSC"},/turf/simulated/floor/pavement/empty,/area/faction_base/oni)
 "fi" = (/obj/machinery/light/street,/turf/simulated/floor/pavement{tag = "icon-pavement (EAST)"; icon_state = "pavement"; dir = 4},/area/faction_base/oni)
 "fj" = (/obj/machinery/light/street,/turf/simulated/floor/pavement{tag = "icon-pavement (WEST)"; icon_state = "pavement"; dir = 8},/area/faction_base/oni)
 "fk" = (/obj/structure/reagent_dispensers/water_cooler,/turf/simulated/floor/tech/gray,/area/faction_base/oni/research)
